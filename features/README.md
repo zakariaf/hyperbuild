@@ -1,7 +1,7 @@
 # features/ — the feature-spec contract
 
-One markdown file per feature, written by step 4.5 (`appbuilder-4-5-feature-specs`,
-spawning 3–5 `ab-feature-author` in parallel). Every must/should PRD feature gets a
+One markdown file per feature, written by step 4.5 (`hyperbuild-4-5-feature-specs`,
+spawning 3–5 `hb-feature-author` in parallel). Every must/should PRD feature gets a
 file; could-features get files only if the cap allows. **Cap: 15 files at `standard`
 gear / 25 at `premier`.** This directory is pipeline-owned — never hand-edit.
 

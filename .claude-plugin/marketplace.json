@@ -1,0 +1,16 @@
+{
+  "name": "hyperbuild",
+  "owner": {
+    "name": "Zakaria Fatahi"
+  },
+  "metadata": {
+    "description": "A Claude Code pipeline harness that takes one app idea from deep research through design and planning to a shipped implementation, with exactly two human touchpoints."
+  },
+  "plugins": [
+    {
+      "name": "hyperbuild",
+      "source": "./",
+      "description": "Turns Claude Code into an app factory: one idea prompt in, a researched, designed, planned, and implemented application out, with exactly two human touchpoints. /hyperbuild <idea> runs a 14-step autonomous Stage A — market recon, social sentiment mining, a research audit, PRD and feature specs, stack research, three complete design systems with HTML mockups of every screen, project-specific skill generation, and epics/tasks — then stops at a design gate. /hyperbuild-choose a|b|c runs Stage B: scaffold, wave-parallel implementation with git discipline, adversarial review, and a traceability ship gate that ends in a working app."
+    }
+  ]
+}

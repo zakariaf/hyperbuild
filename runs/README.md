@@ -1,9 +1,9 @@
 # runs/ — run workspaces
 
-One directory per pipeline run, created at runtime by step 1 (`appbuilder-1-intake`).
+One directory per pipeline run, created at runtime by step 1 (`hyperbuild-1-intake`).
 This directory holds RUN STATE: the gospel idea, the manifest, the three candidate
 designs, the decisions, and the gate reports. It is pipeline-owned — NEVER hand-edit
-anything under `runs/` (the one interface for human input is `/appbuilder-choose`, and
+anything under `runs/` (the one interface for human input is `/hyperbuild-choose`, and
 even that writes its file through the skill, not your editor).
 
 One harness checkout = one app, so there is normally exactly one run workspace here.
@@ -34,7 +34,7 @@ runs/<run_tag>/
 │       └── screenshots/<screen>.png   # headless-Chrome render of every mockup (step 8) — the visual spec steps 14–15 compare against
 ├── decisions/
 │   ├── platform.md            # chosen stack + rationale (step 1)
-│   └── design-choice.md       # written by /appbuilder-choose
+│   └── design-choice.md       # written by /hyperbuild-choose
 └── gates/
     ├── design-gate-report.md  # step 12
     └── ship-report.md         # step 16
@@ -75,17 +75,17 @@ Records step transitions. The router reads it FIRST on any resume.
 ```
 
 - `stage` — `"PLAN"` (steps 1–12) or `"BUILD"` (steps 13–16). Flipped to `"BUILD"` by
-  `/appbuilder-choose`.
+  `/hyperbuild-choose`.
 - `gear` — `"standard"` (default) or `"premier"`; recorded by step 1, read by every step
   for its scale numbers.
 - `steps` — map of step number (`"1"` … `"16"`, including `"3.5"` and `"4.5"`) → `"done"`, written
   at each step's exit. The resume point is the first step in pipeline order without a
   `"done"` entry.
-- `design_choice` — `null` until `/appbuilder-choose` writes `"a"`, `"b"`, or `"c"`.
+- `design_choice` — `null` until `/hyperbuild-choose` writes `"a"`, `"b"`, or `"c"`.
 - `blocked_on` — `null`, `"design-choice"` (set by step 12 at the gate), or an honest
   description of a ship-gate failure after 3 exhausted fix rounds (step 16).
 
-Resume ladder (owned by the router skill `appbuilder`): manifest first, TodoWrite
+Resume ladder (owned by the router skill `hyperbuild`): manifest first, TodoWrite
 second, artifact scan third — the router carries the full step→canonical-artifact
 table. If `design_choice` is set and `stage` is `BUILD`, the router continues at the
 first unfinished build step.
@@ -125,7 +125,7 @@ gallery you open at the design gate to make the run's one human decision.
 
 - `platform.md` — step 1's resolved stack + rationale (stated in the idea wins;
   otherwise inferred, with the inference explained).
-- `design-choice.md` — written by `/appbuilder-choose`: which design won, and the
+- `design-choice.md` — written by `/hyperbuild-choose`: which design won, and the
   recorded paths of the `tokens.css` + `design-system.md` copies placed in `app/design/`.
 
 ### gates/
@@ -151,6 +151,6 @@ its format contract.
   run (a fresh harness clone), not an edit.
 - **`scaffold.md` and `temp/` never ship** and are never cited as evidence in gate
   reports.
-- **Only `/appbuilder-choose` writes `decisions/design-choice.md`.** Editing it directly
+- **Only `/hyperbuild-choose` writes `decisions/design-choice.md`.** Editing it directly
   skips the manifest update and the `app/design/` copy, and Stage B will build against
   nothing.

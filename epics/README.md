@@ -1,9 +1,9 @@
 # epics/ — the backlog contract
 
-The full implementation backlog for the app, written by step 11 (`appbuilder-11-epics`):
-`ab-epic-planner` drafts the breakdown (a temp working doc), 3–6 `ab-task-author` write
+The full implementation backlog for the app, written by step 11 (`hyperbuild-11-epics`):
+`hb-epic-planner` drafts the breakdown (a temp working doc), 3–6 `hb-task-author` write
 each epic's `epic.md` + task files in parallel, the orchestrator writes
-`00-overview.md` from disk, and `ab-spec-critic` audits coverage. Consumed by the
+`00-overview.md` from disk, and `hb-spec-critic` audits coverage. Consumed by the
 step 12 design gate (existence + coverage checks), step 14 (the wave loop schedules
 this directory's task DAG in parallel waves across ALL epics), and the step 16 ship
 gate (every task must be `done`).
@@ -132,7 +132,7 @@ Expected paths under app/ (create or modify). Implementers may deviate with a st
 reason, never silently.
 
 ## Testing requirements
-What tests ab-test-engineer must write/extend, and what they must prove.
+What tests hb-test-engineer must write/extend, and what they must prove.
 
 ## Definition of done
 - [ ] Checkable bullets. Code merged, tests green, feature wired end-to-end.
@@ -182,7 +182,7 @@ todo  →  in-progress  →  done
 - **blocked** — set by step 14 after 3 red implement/test rounds: the task's `files:`
   are reverted, a one-line reason recorded, and its dependents leave the ready set.
   A `blocked` task blocks the step 16 ship gate honestly — never fake a `done`.
-- **done** — set by step 14 only after `ab-test-engineer` reports the task's tests
+- **done** — set by step 14 only after `hb-test-engineer` reports the task's tests
   green. NEVER set `done` on red tests; NEVER skip `in-progress`.
 
 Status changes are surgical frontmatter edits — the body of a task file is never

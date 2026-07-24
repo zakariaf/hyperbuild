@@ -1,20 +1,20 @@
-# CLAUDE.md — appbuilder harness
+# CLAUDE.md — hyperbuild harness
 
-This repo IS the appbuilder harness: a Claude Code pipeline that turns one app idea
+This repo IS the hyperbuild harness: a Claude Code pipeline that turns one app idea
 into a researched, designed, planned, and implemented application. It is not an app
 codebase — the app the pipeline builds lands in `app/`.
 
 ## Entry points
 
-- `/appbuilder <app idea>` — runs Stage A (PLAN, steps 1–12 incl. half-steps 3.5 and
+- `/hyperbuild <app idea>` — runs Stage A (PLAN, steps 1–12 incl. half-steps 3.5 and
   4.5), then stops at the design gate.
-- `/appbuilder-choose <a|b|c>` — the ONE human checkpoint. Records the design choice and
+- `/hyperbuild-choose <a|b|c>` — the ONE human checkpoint. Records the design choice and
   drives Stage B (BUILD, steps 13–16) to a working app.
 
 ## Resume rule
 
 When asked to continue/resume a run (or a session starts mid-run): read
-`runs/*/manifest.json` FIRST, then invoke `Skill(skill: "appbuilder")` — the router owns
+`runs/*/manifest.json` FIRST, then invoke `Skill(skill: "hyperbuild")` — the router owns
 all recovery (manifest → TodoWrite → artifact scan). Never re-run finished steps by hand,
 and never do step work outside its step skill.
 
@@ -29,7 +29,7 @@ Pipeline-owned — NEVER hand-edit:
 `git init`, per-wave/per-epic commits in steps 14–15, clean tree required at the ship
 gate) — never commit into it by hand.
 
-Harness source — editable: `.claude/skills/appbuilder*`, `.claude/agents/ab-*.md`, the docs.
+Harness source — editable: `.claude/skills/hyperbuild*`, `.claude/agents/hb-*.md`, the docs.
 
 ## Map
 
