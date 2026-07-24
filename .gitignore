@@ -1,0 +1,11 @@
+# Harness housekeeping
+.DS_Store
+
+# The generated app is its own git repository (created by step 13)
+app/
+
+# Disposable harvest clones (provenance lives in research/harvest/harvest-log.md)
+research/harvest/*/
+
+# Per-run scratch
+runs/*/temp/
