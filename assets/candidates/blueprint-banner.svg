@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300">
+  <defs>
+    <linearGradient id="hbFill" x1="256" y1="128" x2="384" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#54B4FF"/>
+      <stop offset="1" stop-color="#2E6BFF"/>
+    </linearGradient>
+    <linearGradient id="hbWord" x1="750" y1="0" x2="1030" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#54B4FF"/>
+      <stop offset="1" stop-color="#2E6BFF"/>
+    </linearGradient>
+    <clipPath id="hbTile">
+      <rect width="512" height="512" rx="120"/>
+    </clipPath>
+    <clipPath id="hbBanner">
+      <rect width="1200" height="300" rx="28"/>
+    </clipPath>
+    <pattern id="hbGrid" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" fill="none" stroke="#3E6FA8" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- contained backdrop so the lockup reads on light and dark pages -->
+  <rect x="1" y="1" width="1198" height="298" rx="27" fill="#0A1725" stroke="#24405F" stroke-width="2"/>
+  <rect width="1200" height="300" fill="url(#hbGrid)" clip-path="url(#hbBanner)" opacity="0.18"/>
+
+  <!-- the mark -->
+  <g transform="translate(180 40) scale(0.43)">
+    <rect x="1" y="1" width="510" height="510" rx="119" fill="#0D1F33" stroke="#31517A" stroke-width="2"/>
+    <g clip-path="url(#hbTile)" stroke="#7CB5FF" stroke-width="2" opacity="0.11">
+      <line x1="64" y1="0" x2="64" y2="512"/>
+      <line x1="128" y1="0" x2="128" y2="512"/>
+      <line x1="192" y1="0" x2="192" y2="512"/>
+      <line x1="0" y1="64" x2="256" y2="64"/>
+      <line x1="0" y1="128" x2="256" y2="128"/>
+      <line x1="0" y1="192" x2="256" y2="192"/>
+      <line x1="0" y1="256" x2="256" y2="256"/>
+      <line x1="0" y1="320" x2="256" y2="320"/>
+      <line x1="0" y1="384" x2="256" y2="384"/>
+      <line x1="0" y1="448" x2="256" y2="448"/>
+    </g>
+    <g stroke="#7CB5FF" stroke-width="4" stroke-dasharray="12 10" opacity="0.55">
+      <line x1="84" y1="128" x2="188" y2="128"/>
+      <line x1="84" y1="384" x2="188" y2="384"/>
+      <line x1="128" y1="84" x2="128" y2="188"/>
+      <line x1="128" y1="324" x2="128" y2="428"/>
+    </g>
+    <line x1="186" y1="186" x2="150" y2="150" stroke="#7CB5FF" stroke-width="3" stroke-dasharray="6 7" opacity="0.6"/>
+    <g stroke="#A9CDFF" stroke-width="4" stroke-linecap="round" opacity="0.85">
+      <line x1="178" y1="192" x2="206" y2="192"/>
+      <line x1="192" y1="178" x2="192" y2="206"/>
+    </g>
+    <g stroke="#7CB5FF" stroke-width="4" stroke-linecap="round" opacity="0.45">
+      <line x1="256" y1="94" x2="256" y2="116"/>
+      <line x1="256" y1="396" x2="256" y2="418"/>
+    </g>
+    <path d="M256 128 H192 A64 64 0 0 0 128 192 V320 A64 64 0 0 0 192 384 H256"
+          fill="none" stroke="#7CB5FF" stroke-width="12" stroke-linecap="round"/>
+    <path d="M256 128 H320 A64 64 0 0 1 384 192 V320 A64 64 0 0 1 320 384 H256 Z"
+          fill="url(#hbFill)"/>
+    <circle cx="256" cy="128" r="8" fill="#EAF4FF"/>
+  </g>
+
+  <!-- wordmark: "hyper" neutral, "build" carries the product gradient -->
+  <text x="456" y="181"
+        font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-weight="800" font-size="116" letter-spacing="-2.5"><tspan fill="#EAF2FF">hyper</tspan><tspan fill="url(#hbWord)">build</tspan></text>
+</svg>

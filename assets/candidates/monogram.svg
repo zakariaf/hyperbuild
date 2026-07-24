@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="hyperbuild mark">
+  <defs>
+    <linearGradient id="hb-tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1C2029"/>
+      <stop offset="1" stop-color="#13161C"/>
+    </linearGradient>
+  </defs>
+  <!-- contained backdrop: reads on light and dark pages -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#hb-tile)"/>
+  <rect x="1" y="1" width="510" height="510" rx="111" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="2"/>
+  <!-- 84px-grid lowercase h: stem 116-200, counter 200-272, right stem 272-356 -->
+  <path fill="#F2F1EC" d="M116 82H200V194H356V306H272V278H200V418H116Z"/>
+  <!-- the twist: lower right stem set half a stroke (42) outward, slotted into place -->
+  <rect x="314" y="306" width="84" height="112" fill="#FF5A1F"/>
+</svg>

@@ -33,14 +33,15 @@ git push -u origin main
 
 ## 3. Repo settings
 
-- [ ] **Settings → General → check "Template repository".** This is the primary
+- [x] **Settings → General → "Template repository"** — DONE. This is the primary
       install path: the harness is one-checkout-one-app (runs write into the repo
       root), so "Use this template → new repo per app idea" fits the design exactly.
-- [ ] Description: *Claude Code pipeline harness — one app idea in, a researched,
-      designed, planned, and implemented app out, with exactly one human checkpoint.*
-- [ ] Topics: `claude-code`, `ai-agents`, `app-generator`, `skills`, `deep-research`.
-- [ ] Social preview image (Settings → General): optional — a design-gallery
-      screenshot from a shakedown run works well.
+- [x] Description and topics (`claude-code`, `ai-agents`, `app-generator`, `skills`,
+      `deep-research`, `design-systems`) — DONE via `gh repo edit`.
+- [ ] **Social preview image — the one setting the CLI cannot set.** Upload
+      `assets/social-preview.png` (1280×640, already in the repo) at
+      Settings → General → Social preview → Edit → Upload an image. Without it,
+      links to the repo on X/Slack/LinkedIn render as a plain grey card.
 
 ## 4. Plugin mode — VERIFY BEFORE ANNOUNCING
 

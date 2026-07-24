@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="hyperbuild pipeline mark">
+  <title>hyperbuild — pipeline mark</title>
+  <defs>
+    <linearGradient id="pipe" gradientUnits="userSpaceOnUse" x1="84" y1="92" x2="428" y2="438">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- pipeline ring: five uniform segments, 34deg each on 60deg slots, R=176, center (256,265) -->
+  <g fill="none" stroke="url(#pipe)" stroke-width="44" stroke-linecap="round">
+    <path d="M 427.49 225.41 A 176 176 0 0 0 376.03 136.28"/>
+    <path d="M 376.03 393.72 A 176 176 0 0 0 427.49 304.59"/>
+    <path d="M 204.54 433.31 A 176 176 0 0 0 307.46 433.31"/>
+    <path d="M 84.51 304.59 A 176 176 0 0 0 135.97 393.72"/>
+    <path d="M 135.97 136.28 A 176 176 0 0 0 84.51 225.41"/>
+  </g>
+
+  <!-- the one human checkpoint: open gate node at 12 o'clock -->
+  <circle cx="256" cy="89" r="28" fill="none" stroke="#F59E0B" stroke-width="24"/>
+
+  <!-- the one prompt: chevron at the center -->
+  <path d="M 216 187 L 296 265 L 216 343" fill="none" stroke="url(#pipe)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

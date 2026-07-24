@@ -1,6 +1,18 @@
-# hyperbuild
+<p align="center">
+  <img src="assets/banner.png" alt="hyperbuild" width="720">
+</p>
 
-### One prompt in. A researched, designed, planned, implemented app out — you make exactly one decision: which design.
+<h3 align="center">One prompt in. A researched, designed, planned, implemented app out —<br>you make exactly one decision: which design.</h3>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/zakariaf/hyperbuild" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/Claude%20Code-pipeline-6E56CF" alt="Claude Code pipeline">
+  <img src="https://img.shields.io/badge/skills-20-45C4FF" alt="20 skills">
+  <img src="https://img.shields.io/badge/agents-19-FFB224" alt="19 agents">
+  <a href="https://github.com/zakariaf/hyperbuild/generate"><img src="https://img.shields.io/badge/use%20this-template-2ea44f" alt="Use this template"></a>
+</p>
+
+---
 
 **hyperbuild turns Claude Code into an app factory.** It is an 18-step, two-stage pipeline harness: a thin router skill drives per-step skills, tool-locked subagents do the work in parallel, every artifact lands on disk, and crashed runs resume at the exact step where they died.
 

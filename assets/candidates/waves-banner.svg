@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="hyperbuild">
+  <title>hyperbuild</title>
+  <defs>
+    <linearGradient id="hbWavesTileBanner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B2340"/>
+      <stop offset="1" stop-color="#0B101F"/>
+    </linearGradient>
+  </defs>
+  <!-- contained backdrop: banner reads identically on light and dark pages -->
+  <rect width="1200" height="300" rx="40" fill="url(#hbWavesTileBanner)"/>
+  <rect x="1.5" y="1.5" width="1197" height="297" rx="38.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="3"/>
+  <!-- mark (same geometry as waves.svg, tile omitted), scaled 0.56, left-anchored at x=152 -->
+  <g transform="translate(96 6.6) scale(0.56)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="44">
+    <path d="M122 410 L256 330 L390 410" stroke="#45C4FF" stroke-opacity="0.42"/>
+    <path d="M122 334 L256 254 L390 334" stroke="#45C4FF" stroke-opacity="0.68"/>
+    <path d="M122 258 L214 203" stroke="#FFB224"/>
+    <path d="M298 203 L390 258" stroke="#FFB224"/>
+    <path d="M122 182 L256 102 L390 182" stroke="#45C4FF"/>
+  </g>
+  <text x="380" y="186" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="800" font-size="140" letter-spacing="-5"><tspan fill="#45C4FF">hyper</tspan><tspan fill="#EAEFFA">build</tspan></text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="hyperbuild">
+  <defs>
+    <linearGradient id="hb-panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1C2029"/>
+      <stop offset="1" stop-color="#13161C"/>
+    </linearGradient>
+  </defs>
+  <!-- contained panel: reads on light and dark pages -->
+  <rect x="0" y="0" width="1200" height="300" rx="48" fill="url(#hb-panel)"/>
+  <rect x="1" y="1" width="1198" height="298" rx="47" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="2"/>
+  <!-- mark: same geometry as monogram.svg, scaled; baseline-grounded, vertically centered -->
+  <g transform="translate(21.4 15) scale(0.54)">
+    <path fill="#F2F1EC" d="M116 82H200V194H356V306H272V278H200V418H116Z"/>
+    <rect x="314" y="306" width="84" height="112" fill="#FF5A1F"/>
+  </g>
+  <!-- wordmark: anchored to the center of the zone right of the mark, robust to font metrics -->
+  <text x="698" y="185" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="800" font-size="120" letter-spacing="-4"><tspan fill="#F2F1EC">hyper</tspan><tspan fill="#FF5A1F">build</tspan></text>
+</svg>
