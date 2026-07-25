@@ -260,7 +260,8 @@ For a genuine tweak inside a direction's own thesis:
 
 1. Write `runs/<run_tag>/temp/revision-R<N>/tweak-<letter>.md`: the verbatim request,
    the specific decisions it changes, and the lines of that direction's
-   `## Commitments` (in `research/design/<slug>.md`) it must still honor.
+   `## Commitments` (in `research/03-design-system/research/<slug>.md`) it must still
+   honor.
 2. Invoke `Skill(skill: "hyperbuild-7-design-systems")` — its canonical token contract
    (7.1) and mechanical validation (7.4) still bind — then spawn exactly ONE
    `hb-design-system-author`, for the affected letter only, using this revision-scoped
@@ -286,7 +287,10 @@ For a genuine tweak inside a direction's own thesis:
      - run_tag: <run_tag>
      - direction_letter: <letter>
      - direction_name: "<Name>"
-     - research_doc: research/design/<slug>.md
+     - research_doc: research/03-design-system/research/<slug>.md
+     - corrections_doc: research/03-design-system/author/design-directions.md
+       — its "## Corrections that override the research docs" table BEATS
+       your research doc wherever they disagree
      - revision_request: "<the user's words, verbatim>"
      - revision_note: runs/<run_tag>/temp/revision-R<N>/tweak-<letter>.md
      - output_dir: runs/<run_tag>/designs/<letter>/
@@ -298,8 +302,16 @@ For a genuine tweak inside a direction's own thesis:
        change a single value. Its §2 anti-patterns are DEFECTS, its §3
        eight commitments are mandatory sections, its §4 layout rules bind
        the mockups built from your tokens.
-     - research/design/<slug>.md — your direction's brief; "## Commitments"
-       still binds except where the revision request overrides it
+     - research/03-design-system/research/<slug>.md — your direction's
+       brief; "## Commitments" still binds except where the revision
+       request overrides it
+     - research/03-design-system/author/design-directions.md — its
+       "## Corrections that override the research docs" table OVERRIDES
+       your direction doc (docs/RESEARCH-ARCHIVE.md §7): the direction
+       doc was never rewritten when a fact-checker refuted it, so a
+       REFUTED font or effect must not appear in tokens.css even though
+       the brief still names it; a PARTIALLY_TRUE claim ships only in
+       its corrected form. The revision may not re-introduce one either
      - runs/<run_tag>/designs/<letter>/design-system.md — what exists today
      - runs/<run_tag>/temp/revision-R<N>/tweak-<letter>.md — the change
      - runs/<run_tag>/decisions/platform.md, research/product-spec.md

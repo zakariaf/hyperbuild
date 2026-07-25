@@ -33,7 +33,8 @@ inputs and exact output path; (4) the context files to read first.
   shas from its manifest note: run `git -C app show <sha>` per sha,
   read the touched files' current state, and review the union of those
   diffs; whole-app mode — `app/`.
-- **law**: `research/stack-guide.md` + `.claude/skills/app-code-style`,
+- **law**: `research/02-engineering/author/stack-guide.md` +
+  `.claude/skills/app-code-style`,
   `app-architecture`, `app-testing`, `app-components`,
   `app-review-checklist`. Read the checklist skill FIRST — it is the
   review contract distilled.

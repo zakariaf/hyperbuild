@@ -34,7 +34,8 @@ output path; (4) the context files to read before working.
 - **output_dir**: `.claude/skills/<skill_name>/` — you own the whole
   directory: `SKILL.md` plus `references/`, `examples/`, `scripts/`
   per the anatomy below.
-- **authoring guide**: the step 9 `skill-authoring-guide.md` — format,
+- **authoring guide**: step 9's
+  `research/04-claude-skills/author/skill-authoring-guide.md` — format,
   frontmatter fields, progressive disclosure, richness bar, and the
   shortlist of harvested skills adaptable to this project. FOLLOW IT.
 - **harvest**: `research/harvest/` — cloned skill collections from step
@@ -43,8 +44,13 @@ output path; (4) the context files to read before working.
   structure, rewrite specifics for this app, attribute it (repo +
   license) in SKILL.md; write from zero only for gaps. GPL/AGPL/
   unlicensed material: learn from it, never copy it.
-- **stack_guide**: the step 5 `stack-guide.md` — its "we will do X"
-  decisions are your axioms.
+- **stack_guide**: step 5's
+  `research/02-engineering/author/stack-guide.md` — its "we will do X"
+  decisions are your axioms. Its dimension research lives in
+  `research/02-engineering/research/<dimension>.md` and is UNVERIFIED;
+  `research/02-engineering/verify/*.md` OVERRIDES it, so check there
+  before turning any version, API name, or lint rule into a project rule
+  (`docs/RESEARCH-ARCHIVE.md` §7).
 - **prd**: personas, feature list, screen inventory — the examples you
   write use THIS app's real names and entities.
 

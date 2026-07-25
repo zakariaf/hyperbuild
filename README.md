@@ -8,7 +8,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/zakariaf/hyperbuild" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-pipeline-6E56CF" alt="Claude Code pipeline">
   <img src="https://img.shields.io/badge/skills-23-45C4FF" alt="23 skills">
-  <img src="https://img.shields.io/badge/agents-20-FFB224" alt="20 agents">
+  <img src="https://img.shields.io/badge/agents-22-FFB224" alt="22 agents">
   <a href="https://github.com/zakariaf/hyperbuild/generate"><img src="https://img.shields.io/badge/use%20this-template-2ea44f" alt="Use this template"></a>
 </p>
 
@@ -103,20 +103,20 @@ Stage B:  (checkpoint) → 13 → 14 → 15 → 16 → done
 | # | Step | What it does | Spawns (parallel) |
 |---|------|--------------|-------------------|
 | 1 | Intake | Verbatim idea → `idea.md`; mint run_tag; resolve platform (rationale in `decisions/platform.md`); init manifest + scaffold; seed TodoWrite | — |
-| 2 | Market recon *(∥ 3)* | Competitor discovery → per-competitor dossiers + `competitor-landscape.md` feature matrix | 1 hb-competitor-scout, then one hb-competitor-analyst per competitor (6–8 standard / 12–15 premier) |
-| 3 | Social mining *(∥ 2)* | What real users say on Reddit, HN, app stores, LinkedIn/X → pain points + wish lists ranked frequency × intensity → `sentiment-synthesis.md` | 4 hb-sentiment-miner (one per platform group) |
-| 3.5 | Research audit | Adversarial audit of steps 2+3: tries to REFUTE the top pain points + wish-list items, clusters syndicated copies (they argue with the weight of ONE source), spot-checks version claims against live sources → `research/research-audit.md`; confirmed findings patch the synthesis docs — downgraded/annotated, never silently deleted | 1 hb-research-critic |
+| 2 | Market recon *(∥ 3)* | Competitor discovery → per-competitor dossiers in `research/01-product-and-market/research/competitors/`. Every price, tier, version and "they already ship this" claim is REGISTERED as a load-bearing claim, then fact-checked one agent per claim into the area's `verify/`; the corrected synthesis lands in `author/competitor-landscape.md` | 1 hb-competitor-scout, then one hb-competitor-analyst per competitor (6–8 standard / 12–15 premier), then one hb-claim-verifier **per claim** |
+| 3 | Social mining *(∥ 2)* | What real users say on Reddit, HN, app stores, LinkedIn/X → pain points + wish lists ranked frequency × intensity. Claims registered and verified the same way (a "top complaint" that is one viral thread reposted five times does not survive) → `author/sentiment-synthesis.md` | 4 hb-sentiment-miner (one per platform group), then one hb-claim-verifier per registered claim |
+| 3.5 | Research audit | The area-01 corpus pass: critics read the WHOLE product-and-market corpus for contradictions BETWEEN dimensions — the defect class no single-claim fact-check can see — plus cherry-picking and syndicated copies (derivative reposts argue with the weight of ONE source) → `01-product-and-market/critique/`, then the area's `_INDEX.md`. Every verify/ correction is applied to the synthesis docs: REFUTED claims never reach the PRD, and nothing is silently deleted | 2 critic seats (3 premier), one lens each — hb-research-critic takes the skeptic seat, hb-corpus-critic the rest |
 | 4 | Product spec | Merge 2+3 (as audited by 3.5) → the PRD: personas, MoSCoW feature list, differentiators, evidence traces, canonical screen inventory with per-screen mockup-feasibility (full/partial/none) | 1 hb-spec-critic reviews; orchestrator patches |
 | 4.5 | Feature specs | One deep spec file per must/should feature → `features/NN-<slug>.md` + `features/00-index.md` | 3–5 hb-feature-author (feature batches) |
-| 5 | Stack research | Best practices for the chosen platform: architecture, structure, testing, tooling/CI → `stack-guide.md` with committed "we will do X" decisions | 4 hb-stack-researcher (one per topic) |
-| 6 | Design research | Propose exactly 3 named design directions; deep research each | 3 hb-design-researcher (one per direction) |
+| 5 | Stack research | Best practices for the chosen platform, ONE agent per dimension (6–8 standard / 10–14 premier): architecture, structure, state, testing, lints, CI, performance… → `research/02-engineering/research/`. Every version, package status, licence and API name a decision rests on is verified by its own fact-checker → `verify/`; corpus critics catch cross-dimension contradictions → `critique/`; then `author/stack-guide.md` with committed "we will do X" decisions | 6–8 / 10–14 hb-stack-researcher, then one hb-claim-verifier per claim (≤25 / ≤60 per area), then 3 / 5 hb-corpus-critic — area 02 runs the larger panel by design |
+| 6 | Design research | Propose exactly 3 named design directions; deep research each → `research/03-design-system/research/`. Claims that later become code — the platform design system's real status, font licences, component/API names — are fact-checked into `verify/` before any system is authored | 3 hb-design-researcher (one per direction), then one hb-claim-verifier per claim, then 2–3 hb-corpus-critic |
 | 7 | Design systems | 3 full design systems: `design-system.md` + `tokens.css` each — type, color (light+dark), spacing, components | 3 hb-design-system-author (one per direction) |
 | 8 | Mockups *(∥ 9)* | Every mockable PRD screen × 3 designs as self-contained HTML with REAL content + headless-Chrome `screenshots/` renders + `designs/index.html` gallery | 3–6 hb-mockup-smith (screens split per design) |
 | 8.5 | Visual QA | The pixels get reviewed before you do: one critic per direction OPENS every rendered screenshot and judges it against the binding craft bar in [docs/DESIGN-CRAFT.md](docs/DESIGN-CRAFT.md) + that direction's own design system — craft (signature element, type pairing, depth, shape language, data personality, empty-state art), layout integrity (nothing clipped, no FAB parked on a list row, deliberate truncation, 44px tap targets, contrast, safe areas), and whether the three directions actually look like three products. Defects re-spawn the smith that drew the screen, re-render, re-judge (≤2 critic rounds = one patch round) → `gates/visual-qa-{a,b,c}.json` | 3 hb-design-critic (one per direction) |
-| 9 | Skill research *(∥ 8)* | How to author great Claude Code skills → `skill-authoring-guide.md` (mines hyperresearch as the exemplar) | 1–2 hb-stack-researcher |
+| 9 | Skill research *(∥ 8)* | How to author great Claude Code skills, one agent per dimension → `research/04-claude-skills/research/` (mines hyperresearch and `zakariaf/Flutter-Skills` as exemplars). Frontmatter fields, tool names and format rules that step 10 will BUILD against get verified into `verify/` — an invented field ships five broken skills → `author/skill-authoring-guide.md` | one hb-stack-researcher per dimension, then one hb-claim-verifier per claim, then 2–3 hb-corpus-critic |
 | 10 | Skill forge | Generate PROJECT-SPECIFIC skills into `.claude/skills/`: `app-code-style`, `app-architecture`, `app-testing`, `app-components`, `app-review-checklist` | 5 hb-skill-smith (one per skill) |
 | 11 | Epics | The full backlog: `epics/00-overview.md` + one dir per epic with `epic.md` + task files; every must/should feature → ≥1 task | 1 hb-epic-planner, then 3–6 hb-task-author, then hb-spec-critic coverage audit |
-| 12 | Design gate | Verify EVERY Stage-A artifact + full coverage (missing mockup screenshots warn, never hard-fail) → `gates/design-gate-report.md`; then STOP and ask for `/hyperbuild-choose a\|b\|c`. The ONE permitted stop | 1 hb-gate-verifier |
+| 12 | Design gate | Verify EVERY Stage-A artifact + full coverage (missing mockup screenshots warn, never hard-fail) → `gates/design-gate-report.md`; write `research/README.md` — the areas index + reusability guide that tells your NEXT app what it can copy instead of re-researching; then STOP and ask for `/hyperbuild-choose a\|b\|c`. The ONE permitted stop | 1 hb-gate-verifier |
 
 ### Checkpoint — `/hyperbuild-choose <a|b|c>`
 
@@ -150,9 +150,39 @@ Your idea stays gospel: the verbatim body of `idea.md` is never rewritten — an
 | 15 | Adversarial review | Whole-app pass: 3 critics in parallel (code quality, spec coverage, mockup fidelity via app-vs-design screenshot comparison) → ranked findings → surgical patches; structural findings become new tasks (max 1 loop back through step 14) | 3 critics parallel, then hb-patcher |
 | 16 | Ship gate | Tests green, lint clean, skill gates pass, every task done, acceptance criteria checked, the traceability chain walked mechanically (feature → spec file → done tasks → files in `app/` → passing tests), git tree clean with the wave/epic commit history present, app builds and runs → `gates/ship-report.md`. Max 3 fix rounds, else blocked + honest report | 1 hb-gate-verifier |
 
+## The research archive
+
+Most pipelines treat research as scaffolding: a few agents survey the web, a synthesis doc absorbs their conclusions, and the sources evaporate. hyperbuild treats it as **the durable asset of the run** — and holds it to a written contract, [docs/RESEARCH-ARCHIVE.md](docs/RESEARCH-ARCHIVE.md), that is binding on steps 2, 3, 3.5, 5, 6, 9 and 12. Every research step writes ONE area, and every area has the same four phases:
+
+```
+research/
+├── README.md                    # areas index + REUSABILITY GUIDE (step 12)
+├── product-spec.md              # the PRD (step 4) — the product contract, not a finding
+├── harvest/                     # shallow-cloned repos + harvest-log.md
+├── 01-product-and-market/       # steps 2, 3, 3.5
+│   ├── _INDEX.md                #   every agent, every phase, every verdict, with file sizes
+│   ├── research/                #   one file per dimension — independent, UNVERIFIED by construction
+│   │   ├── competitors/<slug>.md
+│   │   └── sentiment/<platform>.md
+│   ├── verify/<dimension>--<claim-slug>.md   # one file per load-bearing CLAIM
+│   ├── critique/<critic-name>.md             # critics reading the WHOLE corpus
+│   └── author/competitor-landscape.md, author/sentiment-synthesis.md
+├── 02-engineering/              # step 5 → author/stack-guide.md
+├── 03-design-system/            # step 6 → author/design-directions.md
+└── 04-claude-skills/            # step 9 → author/skill-authoring-guide.md
+```
+
+**`verify/` is the part that matters.** A surveying researcher optimizes for coverage, and will cheerfully repeat a 2023 blog post, a package archived last year, and an API name that never existed. So every claim a decision rests on — every version, price, licence, store policy, and API name — is handed to its OWN agent, one claim per agent, all in parallel, and that agent is told to **refute** it against primary sources: the maintainer's docs, the registry page, the official API reference, the actual repo. Verdicts come from a closed vocabulary — `CONFIRMED` / `PARTIALLY_TRUE` / `REFUTED` / `UNVERIFIABLE` — and **a REFUTED claim may never survive into a synthesis, the PRD, a feature spec, an epic, or a line of code.** It is corrected in `author/`, never silently deleted: the `verify/` file stays and the original `research/` file is left standing, because rewriting it would destroy the evidence that verification works. On the archive this format is modeled on, that pass caught a competitor already shipping the entire proposed MVP at a tenth of the assumed price, a licence change that made the core dependency store-incompatible, and a widely-cited statistic that appears to be fabricated.
+
+**Every file ends with the prompt that produced it**, verbatim, in a collapsible block. A finding tells you what one agent concluded; the prompt tells you what it was asked, what context it was handed, and what it was never asked to consider — the only honest way to judge the blind spots, and the only way to re-run the same research later with a different brief.
+
+**And it is built to be spent once.** A run burns millions of tokens establishing which state library is current, which package is abandoned, and what the store's privacy rules actually say — almost none of it specific to the app that paid for it. So step 12 writes `research/README.md`, a reusability guide that sorts every area into *portable to any app*, *portable to any app on this platform*, and *specific to this app — context only*, with capture dates and a re-verify rule. Area names are FIXED and never platform-specific (`02-engineering`, never `02-flutter-engineering`), so copying `02-engineering/`, `03-design-system/` and `04-claude-skills/` into your next hyperbuild checkout before running `/hyperbuild` is path-compatible with zero edits — and that run skips straight past research it already owns.
+
+The honest trade: this costs *far* more agents than a survey. A `standard` engineering area is now something like 6–8 researchers, 20–40 fact-checkers, 2 corpus critics and an author, and the other three areas scale the same way — research dominates the token bill of a run. That is the price of an archive whose numbers are still worth reading in six months, paid once across every app you build from it.
+
 ## Agent roster
 
-20 subagents in `.claude/agents/`. Tools are the enforcement mechanism, not documentation: critics physically cannot edit, the patcher physically cannot create files.
+22 subagents in `.claude/agents/`. Tools are the enforcement mechanism, not documentation: critics physically cannot edit, the patcher physically cannot create files.
 
 | Agent | Model | Tools | Role |
 |-------|-------|-------|------|
@@ -160,7 +190,9 @@ Your idea stays gospel: the verbatim body of `idea.md` is never rewritten — an
 | `hb-competitor-analyst` | sonnet | WebSearch, WebFetch, Read, Write | Deep dossier on ONE competitor: version, features, changelog, pricing, ratings |
 | `hb-sentiment-miner` | sonnet | WebSearch, WebFetch, Read, Write | Mine ONE platform group for real user opinions; verbatim quotes + URLs |
 | `hb-stack-researcher` | sonnet | WebSearch, WebFetch, Read, Write, Bash | Best practices for ONE topic on the chosen stack; harvest-first; committed decisions |
-| `hb-research-critic` | opus | Read, Grep, Glob, WebSearch, WebFetch | Adversarial audit of the research corpus: refutes pain points, clusters syndicated copies, live spot-checks claims; NEVER edits |
+| `hb-claim-verifier` | sonnet | WebSearch, WebFetch, Read, Write | ADVERSARIAL FACT-CHECKER for ONE claim: told to REFUTE it against primary sources (registry, official reference, the actual repo); writes `verify/<dimension>--<claim-slug>.md` with a closed-vocabulary verdict |
+| `hb-corpus-critic` | opus | Read, Grep, Glob, Write | Reads a WHOLE research area under ONE assigned lens and hunts contradictions BETWEEN dimensions — the defect class no single-claim check sees; writes `critique/<critic-name>.md`, separating `[VERIFIED]` from `[OPEN]`; NEVER edits another agent's file |
+| `hb-research-critic` | opus | Read, Grep, Glob, WebSearch, WebFetch, Write | The SKEPTIC seat of the step-3.5 critique panel (area 01 only): synthesis-level audit of `author/competitor-landscape.md` + `author/sentiment-synthesis.md` — refutes pain points, clusters syndicated copies, live spot-checks claims, confirms quotes appear verbatim — and WRITES `research/01-product-and-market/critique/research-audit.md` itself; NEVER edits the corpus |
 | `hb-feature-author` | sonnet | Read, Write, Grep, Glob | Complete feature-spec files for ONE batch of PRD features; every claim evidenced |
 | `hb-design-researcher` | sonnet | WebSearch, WebFetch, Read, Write, Bash | Deep research ONE design direction: reference systems, type, color, motion; harvest-first |
 | `hb-design-system-author` | opus | Read, Write | Author ONE complete design system (design-system.md + tokens.css) |
@@ -185,6 +217,7 @@ hyperbuild/                          # the harness (this repo)
 ├── CLAUDE.md                         # project memory for Claude Code
 ├── PIPELINE.md                       # deep architecture doc
 ├── docs/DESIGN-CRAFT.md              # the BINDING visual craft bar (steps 6, 7, 8, 8.5)
+├── docs/RESEARCH-ARCHIVE.md          # the BINDING research output contract (steps 2, 3, 3.5, 5, 6, 9, 12)
 ├── LICENSE                           # MIT
 ├── .claude/
 │   ├── skills/
@@ -194,7 +227,7 @@ hyperbuild/                          # the harness (this repo)
 │   │   ├── hyperbuild-redesign/      # gate-time: new directions (KEEP the ones you like)
 │   │   ├── hyperbuild-1-intake/ … hyperbuild-16-ship-gate/   # 19 step skills (incl. 3.5, 4.5, 8.5)
 │   │   └── app-*/                    # PROJECT-SPECIFIC skills, generated by step 10
-│   └── agents/hb-*.md                # the 20 subagents above
+│   └── agents/hb-*.md                # the 22 subagents above
 ├── skills -> .claude/skills          # symlinks for plugin packaging (Mode B)
 ├── agents -> .claude/agents
 ├── runs/<run_tag>/                   # run state (see runs/README.md)
@@ -204,13 +237,19 @@ hyperbuild/                          # the harness (this repo)
 │   ├── designs/index.html            # the comparison gallery you open
 │   ├── decisions/                    # platform.md, design-choice.md, revisions.md
 │   └── gates/                        # design-gate-report.md, visual-qa-{a,b,c}.json, ship-report.md
-├── research/                         # the vault: steps 2–9 (see research/README.md)
+├── research/                         # the vault: steps 2–9, four areas × four phases
+│   ├── 01-product-and-market/        #   research/ → verify/ → critique/ → author/ + _INDEX.md
+│   ├── 02-engineering/               #   (see The research archive above, and docs/RESEARCH-ARCHIVE.md)
+│   ├── 03-design-system/
+│   ├── 04-claude-skills/
+│   ├── product-spec.md               # the PRD (step 4)
+│   └── README.md                     # areas index + reusability guide (step 12)
 ├── features/                         # one spec per feature: step 4.5 (see features/README.md)
 ├── epics/                            # the backlog: step 11 (see epics/README.md)
 └── app/                              # THE ACTUAL APP: steps 13–16
 ```
 
-Research is a first-class deliverable, not run debris: competitor dossiers, sentiment syntheses, the PRD, the stack guide, and design research all persist at the repo root as plain markdown, readable without any tooling. Harvest-first steps start from two pre-vetted GitHub sources: [`zakariaf/Flutter-Skills`](https://github.com/zakariaf/Flutter-Skills) (MIT — the anatomy exemplar for all generated skills, and a direct content source when the platform is Flutter) and [`nextlevelbuilder/ui-ux-pro-max-skill`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT — cherry-picked, never adopted wholesale: the three-layer token architecture and the token-validator script pattern are the keepers).
+Research is a first-class deliverable, not run debris: competitor dossiers, sentiment syntheses, the PRD, the stack guide, and design research all persist at the repo root as plain markdown, readable without any tooling — each area carrying its fact-checks in `verify/`, its cross-cutting critiques in `critique/`, and the prompt that produced every single file ([The research archive](#the-research-archive)). Harvest-first steps start from two pre-vetted GitHub sources: [`zakariaf/Flutter-Skills`](https://github.com/zakariaf/Flutter-Skills) (MIT — the anatomy exemplar for all generated skills, and a direct content source when the platform is Flutter) and [`nextlevelbuilder/ui-ux-pro-max-skill`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT — cherry-picked, never adopted wholesale: the three-layer token architecture and the token-validator script pattern are the keepers).
 
 ## Scale gears
 
@@ -222,7 +261,11 @@ Default gear: `standard`. Say "premier" in your idea prompt to opt in; step 1 re
 | Sources per competitor dossier | 5–8 | 10–15 |
 | Sentiment posts mined per platform | 25–40 | 60–100 |
 | Stack research sources per topic | 8–12 | 15–25 |
+| Engineering research dimensions | 6–8 | 10–14 |
 | Design research sources per direction | 6–10 | 12–18 |
+| Claims verified per research file | 3–5 | 6–10 |
+| Verify agents per area (hard ceiling) | ≤25 | ≤60 |
+| Corpus critics per area *(the area binds the count: 01/03/04 = 2 / 3 · 02 = 3 / 5)* | 2–3 | 3–5 |
 | Mockup screens | every PRD screen (cap 12) | every PRD screen (cap 20) |
 | Feature spec files | every must/should (cap 15) | every must/should (cap 25) |
 | Epics | 4–8 | 6–12 |
@@ -239,7 +282,7 @@ Default gear: `standard`. Say "premier" in your idea prompt to opt in; step 1 re
 ## What it doesn't do
 
 - **It doesn't install your toolchain.** Stage B runs real platform commands (`flutter create`, Xcode builds, `npm` scaffolds). The SDK for your chosen platform must already be installed and on PATH, or step 13 blocks.
-- **Research quality depends on web access.** Steps 2–9 live on WebSearch/WebFetch. Rate limits, blocked sites, and thin niches degrade the evidence base; the artifacts cite what they actually found, but they can't cite what they couldn't reach.
+- **Research quality depends on web access.** Steps 2–9 live on WebSearch/WebFetch. Rate limits, blocked sites, and thin niches degrade the evidence base; the artifacts cite what they actually found, but they can't cite what they couldn't reach. The fact-checking pass is honest about this rather than papering over it: a claim no primary source settles comes back `UNVERIFIABLE` and is barred from carrying a `must`-level decision on its own.
 - **You still review the code.** The ship gate proves the tests pass, the lint is clean, every task is done, and the app builds. It does not prove the app is secure, performant at scale, or right for your market. Read `gates/ship-report.md` — including its "known gaps" section — before you ship anything to a user.
 - **It stops exactly once, on purpose.** One checkpoint, one question: a, b, or c. If none of the three fits, `/hyperbuild-revise` and `/hyperbuild-redesign` rebuild the designs *at that same stop* (see [Changing your mind](#changing-your-mind-at-the-gate)) — the pipeline never opens a second checkpoint somewhere else, and it never asks you to arbitrate an architecture decision.
 - **One checkout, one app.** The vault, features, epics, and `app/` are singletons at the repo root. Don't point two ideas at one checkout.

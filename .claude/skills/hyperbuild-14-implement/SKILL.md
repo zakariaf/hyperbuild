@@ -362,7 +362,7 @@ prompt: |
   CONTEXT FILES — READ FIRST, in order:
   1. runs/<run_tag>/idea.md
   2. epics/NN-<slug>/epic.md
-  3. research/stack-guide.md
+  3. research/02-engineering/author/stack-guide.md
   4. .claude/skills/app-review-checklist/SKILL.md — walk it item by item
   5. .claude/skills/app-code-style/SKILL.md and .claude/skills/app-architecture/SKILL.md
 
@@ -416,7 +416,7 @@ prompt: |
   - findings_path: runs/<run_tag>/temp/epic-NN-findings.json
   - patch_log_path: runs/<run_tag>/temp/epic-NN-patch-log.json — already stubbed; Edit the existing keys, the schema is canonical
   - app_root: app/
-  - stack_guide: research/stack-guide.md
+  - stack_guide: research/02-engineering/author/stack-guide.md
   - review_checklist: .claude/skills/app-review-checklist/SKILL.md
 
   For each finding, in severity order: read the file, apply the smallest Edit
@@ -444,8 +444,8 @@ prompt: |
 For each entry in the patch log's `escalated` array: write a NEW task file in the epic's dir with the
 next free task number, matching the frontmatter shape of the epic's existing task files
 exactly (id, epic, `status: todo`, depends_on, size, category, features, files —
-`category` naming a `research/stack-guide.md` `## Code taxonomy` category, matching the
-sibling task files; `files:` an HONEST list of the paths the fix will touch — the wave
+`category` naming a `research/02-engineering/author/stack-guide.md` `## Code taxonomy`
+category, matching the sibling task files; `files:` an HONEST list of the paths the fix will touch — the wave
 scheduler keys disjointness off it, and a lied-about list causes in-wave collisions)
 plus one extra frontmatter
 line `source: escalation — epic NN code review, finding <id>`. Body: the critic's issue +

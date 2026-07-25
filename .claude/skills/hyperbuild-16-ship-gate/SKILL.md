@@ -33,7 +33,7 @@ Read these before spawning:
 - `runs/<run_tag>/idea.md` — verbatim app idea. GOSPEL.
 - `runs/<run_tag>/decisions/platform.md` — chosen platform + rationale (step 1).
 - `runs/<run_tag>/scaffold.md` — the `## Toolchain` section: the VERIFIED build / test / lint commands (step 13 recorded them; steps 14–16 read them verbatim and never re-derive).
-- `research/stack-guide.md` — the committed tooling decisions (step 5) — cross-check only; scaffold.md's verified commands win.
+- `research/02-engineering/author/stack-guide.md` — the committed tooling decisions (step 5) — cross-check only; scaffold.md's verified commands win.
 - `research/product-spec.md` — feature list + screen inventory (for the final message).
 - `epics/00-overview.md` — epic list + PRD coverage matrix; every `epics/NN-<slug>/epic.md` and `task-NN-<slug>.md`.
 - `features/00-index.md` — must/should feature ids.
@@ -62,7 +62,7 @@ Nine checks. ALL must pass. Every round runs ALL nine fresh — a fix for one ch
 
 ## Procedure
 
-1. **Resolve the exact commands from `runs/<run_tag>/scaffold.md` `## Toolchain`.** Step 13 recorded the VERIFIED build / test / lint commands there precisely so steps 14–16 never re-derive them — read them verbatim. Cross-check against `research/stack-guide.md` and `decisions/platform.md`; if scaffold.md's Toolchain section is missing (it shouldn't be — step 13's exit criteria require it), fall back to the stack-guide's committed commands and note the gap in the ship report. Examples of the shape you are looking for — the recorded commands win over these:
+1. **Resolve the exact commands from `runs/<run_tag>/scaffold.md` `## Toolchain`.** Step 13 recorded the VERIFIED build / test / lint commands there precisely so steps 14–16 never re-derive them — read them verbatim. Cross-check against `research/02-engineering/author/stack-guide.md` and `decisions/platform.md`; if scaffold.md's Toolchain section is missing (it shouldn't be — step 13's exit criteria require it), fall back to the stack-guide's committed commands and note the gap in the ship report. Examples of the shape you are looking for — the recorded commands win over these:
 
    | Platform | test_command | lint_command | build_command |
    |----------|-------------|--------------|---------------|
@@ -106,7 +106,8 @@ Nine checks. ALL must pass. Every round runs ALL nine fresh — a fix for one ch
      READ FIRST:
      - runs/<run_tag>/scaffold.md — its ## Toolchain section is the source
        of the commands above
-     - research/stack-guide.md — the committed tooling decisions
+     - research/02-engineering/author/stack-guide.md — the committed
+       tooling decisions
      - epics/00-overview.md — the PRD coverage matrix
      - features/00-index.md — the must/should feature ids
 

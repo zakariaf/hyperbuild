@@ -151,8 +151,9 @@ Frontmatter fields — ALL required:
   the task MUST be split before writing — **no task ships as `L`** (step 11's audit
   flags any `size: L` as a major finding).
 - `category` — the code-taxonomy category (or categories) this task's files belong to,
-  from `research/stack-guide.md`'s `## Code taxonomy`. MANDATORY; step 11's audit
-  rejects a value not present in the taxonomy.
+  from `research/02-engineering/author/stack-guide.md`'s `## Code taxonomy`. MANDATORY;
+  step 11's audit and design-gate check 16 both reject a value not present in that
+  taxonomy — so read the real file, never invent a category.
 - `features` — the feature ids this task implements (`features: [F-03]`). MANDATORY:
   a task that cites no feature is either infrastructure (cite the epic's goal in
   Context and use `features: []` deliberately) or a coverage-matrix bug.

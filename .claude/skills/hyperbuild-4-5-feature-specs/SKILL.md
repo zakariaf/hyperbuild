@@ -28,7 +28,7 @@ You are executing step 4.5 (feature-specs) of the hyperbuild pipeline. Step 4 fr
 - `runs/<run_tag>/idea.md` — the verbatim app idea. GOSPEL.
 - `runs/<run_tag>/manifest.json` — `run_tag`, `gear`; confirm `steps["4"]` is `"done"`
 - `research/product-spec.md` — the PRD: MoSCoW feature list (with Evidence lines) + the canonical screen inventory. FROZEN — never rename a screen or feature here.
-- `research/sentiment-synthesis.md`, `research/sentiment/*.md`, `research/competitor-landscape.md`, `research/competitors/*.md` — the evidence vault the authors cite
+- `research/01-product-and-market/` — the evidence vault the authors cite, in the four phases of `docs/RESEARCH-ARCHIVE.md`: `author/sentiment-synthesis.md` and `author/competitor-landscape.md` (the syntheses), `research/sentiment/*.md` and `research/competitors/*.md` (the verbatim quotes and dossiers Evidence lines point at), `verify/*.md` (fact-check verdicts — a `REFUTED` claim is not evidence and MUST NOT reach a feature spec), `_INDEX.md` (the map)
 - `features/README.md` — the directory format contract (the schemas below mirror it)
 
 Set `steps."4.5" = "running"` in the manifest, mark the step-4.5 todo in_progress, then `mkdir -p features`.
@@ -78,10 +78,16 @@ prompt: |
   READ FIRST (in order):
   - runs/<run_tag>/idea.md
   - research/product-spec.md — your features' sections + the screen inventory
-  - research/sentiment-synthesis.md — the demand evidence
-  - the research/competitors/*.md and research/sentiment/*.md files the
+  - research/01-product-and-market/author/sentiment-synthesis.md — the
+    demand evidence
+  - the research/01-product-and-market/research/competitors/*.md and
+    research/01-product-and-market/research/sentiment/*.md files the
     PRD's Evidence lines cite for your features — verify each citation
     before repeating it
+  - research/01-product-and-market/verify/*.md — a verify file OVERRIDES
+    the research file it checked (docs/RESEARCH-ARCHIVE.md §7): never
+    cite a REFUTED claim, and carry the correction with any
+    PARTIALLY_TRUE one
 
   FEATURE SPEC FORMAT — write every file exactly this shape:
 

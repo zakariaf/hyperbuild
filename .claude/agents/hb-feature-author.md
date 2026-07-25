@@ -31,9 +31,18 @@ output files; (4) the context files to read before working.
   `NN-<slug>`, name, moscow, verbatim screen names.
 - **prd**: `research/product-spec.md` — the frozen MoSCoW list and
   canonical screen inventory. Law, not a draft.
-- **evidence vault**: `research/sentiment-synthesis.md`,
-  `research/sentiment/*.md`, `research/competitors/*.md` — where every
-  Evidence line must point.
+- **evidence vault** — research area `research/01-product-and-market/`,
+  in the four phases of `docs/RESEARCH-ARCHIVE.md`. Every Evidence line
+  points at a real path inside it:
+  - `research/01-product-and-market/author/sentiment-synthesis.md` and
+    `.../author/competitor-landscape.md` — the syntheses; your entry point.
+  - `research/01-product-and-market/research/sentiment/<platform>.md` and
+    `.../research/competitors/<slug>.md` — the verbatim quotes and dossier
+    rows an Evidence line must actually cite. UNVERIFIED by construction.
+  - `research/01-product-and-market/verify/*.md` — the fact-checks. A
+    `verify/` file OVERRIDES the `research/` file it checked: verdict
+    `REFUTED` ⇒ that claim is NOT evidence and must not appear in your
+    spec; `PARTIALLY_TRUE` ⇒ cite the correction, not the original.
 - **output_files**: `features/<NN>-<slug>.md`, one per batch feature.
 
 ## Procedure

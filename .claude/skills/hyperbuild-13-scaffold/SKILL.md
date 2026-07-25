@@ -3,7 +3,8 @@ name: hyperbuild-13-scaffold
 description: >
   Step 13 of the hyperbuild pipeline — the first step of Stage B (BUILD).
   Initializes the real project in app/ per the committed decisions in
-  research/stack-guide.md and runs/<run_tag>/decisions/platform.md, git-inits
+  research/02-engineering/author/stack-guide.md and
+  runs/<run_tag>/decisions/platform.md, git-inits
   app/ with a platform .gitignore (step 14's per-epic reviews need diffs),
   spawns ONE hb-implementer to wire lint + formatter + test harness + CI and
   translate the CHOSEN design's tokens.css into the target framework's theme
@@ -35,8 +36,11 @@ from memory. Then read:
 - `runs/<run_tag>/manifest.json` — `stage` (must be `BUILD`), `design_choice`, `platform`, `gear`
 - `runs/<run_tag>/idea.md` — the verbatim app idea. GOSPEL.
 - `runs/<run_tag>/decisions/platform.md` — chosen stack + rationale
-- `research/stack-guide.md` — committed "we will do X" decisions: scaffolder, lint tool,
-  formatter, test framework, CI shape, project structure. BINDING for this whole step.
+- `research/02-engineering/author/stack-guide.md` — committed "we will do X" decisions:
+  scaffolder, lint tool, formatter, test framework, CI shape, project structure. BINDING
+  for this whole step. Where it names a version, package, or command, the matching
+  `research/02-engineering/verify/*.md` file (if any) OVERRIDES it — a REFUTED claim was
+  supposed to be corrected in the guide, and a survivor here becomes a broken scaffold.
 - `app/design/tokens.css` + `app/design/design-system.md` — the CHOSEN design (copied by
   `/hyperbuild-choose`). If missing, the checkpoint didn't finish — stop and report.
 - `.claude/skills/app-components/SKILL.md` — generated in step 10; gets concrete theme
@@ -153,15 +157,16 @@ prompt: |
   - app_root: app/ (freshly scaffolded <stack> project)
   - tokens: app/design/tokens.css — the CHOSEN design's tokens, light AND dark
   - design_system: app/design/design-system.md
-  - stack_guide: research/stack-guide.md — its decisions are BINDING: lint tool,
-    formatter, test framework, CI shape, project structure
+  - stack_guide: research/02-engineering/author/stack-guide.md — its decisions
+    are BINDING: lint tool, formatter, test framework, CI shape, project
+    structure
   - theme_output: <theme file path(s) from the table for this stack>
   - ci_output: <e.g. app/.github/workflows/ci.yml>
 
   CONTEXT FILES — READ FIRST, in order:
   1. runs/<run_tag>/idea.md
   2. runs/<run_tag>/decisions/platform.md
-  3. research/stack-guide.md
+  3. research/02-engineering/author/stack-guide.md
   4. app/design/design-system.md
   5. app/design/tokens.css
   6. .claude/skills/app-code-style/SKILL.md

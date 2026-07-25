@@ -27,7 +27,7 @@ Read these before spawning anything:
 - `runs/<run_tag>/manifest.json` — run_tag, gear, platform, design_choice, stage (must be BUILD). If the router did not name the active run_tag, take the run whose manifest has `stage: BUILD`.
 - `runs/<run_tag>/idea.md` — verbatim app idea. GOSPEL. Paste into every spawn.
 - `research/product-spec.md` — the PRD: MoSCoW feature list, personas, screen inventory (step 4).
-- `research/stack-guide.md` — committed stack decisions (step 5).
+- `research/02-engineering/author/stack-guide.md` — committed stack decisions (step 5).
 - `runs/<run_tag>/scaffold.md` — `## Toolchain` section: the VERIFIED build/test/lint commands (step 13 wrote them; use them verbatim, never re-derive).
 - `runs/<run_tag>/decisions/design-choice.md` — which design (a|b|c) the user chose.
 - `features/00-index.md` — feature index; every must/should feature id (step 4.5).
@@ -77,8 +77,8 @@ Read these before spawning anything:
      - cap: at most 15 findings, most load-bearing first
 
      READ FIRST (in this order):
-     - research/stack-guide.md — the committed "we will do X"
-       decisions; every deviation in app/ is a finding
+     - research/02-engineering/author/stack-guide.md — the committed
+       "we will do X" decisions; every deviation in app/ is a finding
      - .claude/skills/app-code-style/SKILL.md
      - .claude/skills/app-architecture/SKILL.md
      - .claude/skills/app-testing/SKILL.md
@@ -244,7 +244,7 @@ Read these before spawning anything:
      - patch_log_path: runs/<run_tag>/gates/review-patch-log.json (already
        stubbed — Edit its existing keys, never invent an alternate schema)
      - app_root: app/
-     - stack_guide: research/stack-guide.md
+     - stack_guide: research/02-engineering/author/stack-guide.md
      - tokens: app/design/tokens.css
 
      Each Edit hunk stays surgical: change as little as possible while
@@ -269,7 +269,7 @@ Read these before spawning anything:
     - **Second pass (`gates/review-loop-log.md` exists):** create NOTHING. Append every remaining structural finding under a `## Known gaps` heading in `runs/<run_tag>/gates/review-loop-log.md` — step 16's final message reports them honestly. Skip to Exit criteria.
     - **First pass, structural findings exist:** cap at 6 tasks — criticals and must-feature gaps first; more than 6 means step 14 under-delivered, so log the overflow as known gaps rather than looping forever. For each retained finding:
       1. Pick the owning epic dir under `epics/`; if none fits, create a new epic dir numbered one above the current highest (e.g. `epics/09-review-fixes/` with a minimal `epic.md` matching step 11's epic schema: frontmatter id/name/depends_on, goal, scope, and `- [ ]` acceptance criteria from the findings).
-      2. Write a full task file in that dir following the epic's existing task naming and frontmatter EXACTLY (open a sibling `task-NN-*.md` and match its keys: id, epic, status, depends_on, size, category, features, files — `category` naming a `research/stack-guide.md` `## Code taxonomy` category; `files:` listing the exact `app/` paths the task will create or modify — step 14's wave scheduler and step 16's traceability chain both read it; in a brand-new epic dir with no siblings, use step 11's task schema with those same keys) with `status: todo`. Body: context (quote the finding + evidence), spec, files to touch, testing requirements, definition of done.
+      2. Write a full task file in that dir following the epic's existing task naming and frontmatter EXACTLY (open a sibling `task-NN-*.md` and match its keys: id, epic, status, depends_on, size, category, features, files — `category` naming a `research/02-engineering/author/stack-guide.md` `## Code taxonomy` category; `files:` listing the exact `app/` paths the task will create or modify — step 14's wave scheduler and step 16's traceability chain both read it; in a brand-new epic dir with no siblings, use step 11's task schema with those same keys) with `status: todo`. Body: context (quote the finding + evidence), spec, files to touch, testing requirements, definition of done.
       3. **Register the loop work — keep step 14's bookkeeping true.** For every epic that received a new task: set its entry in the manifest's `epics` object to `status: "in-progress"` and bump `tasks_total`. For a brand-new epic dir: add its row to `epics/00-overview.md`'s Epics table and Build order, and add a manifest `epics` entry (`{"status": "in-progress", "tasks_total": <N>, "tasks_done": 0}`). Step 14's ready set picks up any `status: todo` task file by scanning `epics/` regardless — but its epic progress notes (14.2) and epic-close accounting (14.7) require the manifest `epics` entry and the 00-overview.md row to exist and carry true `tasks_total`/`tasks_done` counts, so register both.
     - Write `runs/<run_tag>/gates/review-loop-log.md`: pass 1 date, finding ids retained, task file paths created, overflow findings (if any) under `## Known gaps`.
 

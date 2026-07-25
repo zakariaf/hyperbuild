@@ -34,8 +34,9 @@ output paths; (4) the context files to read before working.
   row is your scope, the schemas your format.
 - **feature specs**: `features/NN-<slug>.md` for every assigned feature
   id — the primary spec source (UX flow, states, acceptance criteria).
-- **prd** and **stack_guide**: for screen names, entities, and the
-  committed architecture your specs must respect.
+- **prd** (`research/product-spec.md`) and **stack_guide**
+  (`research/02-engineering/author/stack-guide.md`): for screen names,
+  entities, and the committed architecture your specs must respect.
 - **gear**: `standard` (3–8 tasks per epic) or `premier` (4–10).
 - **output paths**: `epics/NN-<slug>/epic.md` plus
   `epics/NN-<slug>/task-MM-<slug>.md`, task MM in execution order

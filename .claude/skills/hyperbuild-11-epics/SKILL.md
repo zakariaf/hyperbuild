@@ -31,7 +31,7 @@ caught now costs one task file; after step 16 it costs a re-plan.
 - `runs/<run_tag>/manifest.json` — `run_tag`, `gear`, `platform`; confirm steps 1–10 are `done`
 - `research/product-spec.md` — the PRD: MoSCoW feature list + the canonical screen inventory
 - `features/00-index.md` — every feature: id, name, moscow, screens (and each `features/NN-<slug>.md` on demand)
-- `research/stack-guide.md` — committed structure/testing decisions AND the `## Code taxonomy` (named code categories + placement rules); "files to touch" paths must follow it, and every task names the category its files belong to
+- `research/02-engineering/author/stack-guide.md` — committed structure/testing decisions AND the `## Code taxonomy` (named code categories + placement rules); "files to touch" paths must follow it, and every task names the category its files belong to
 - `runs/<run_tag>/decisions/platform.md` — chosen stack
 
 Scale knobs (gear from manifest):
@@ -81,7 +81,8 @@ prompt: |
   - runs/<run_tag>/idea.md
   - research/product-spec.md — MoSCoW list + screen inventory
   - features/00-index.md — the feature ids you must assign
-  - research/stack-guide.md + runs/<run_tag>/decisions/platform.md —
+  - research/02-engineering/author/stack-guide.md +
+    runs/<run_tag>/decisions/platform.md —
     architecture shapes the epic seams
 
   Write output_path with: (1) an "## Epics (dependency order)" table —
@@ -156,7 +157,7 @@ prompt: |
   - runs/<run_tag>/idea.md
   - research/product-spec.md — your features' PRD sections + the screen inventory
   - features/<NN>-<slug>.md for EVERY id in assigned_features — the primary spec (UX flows, states, acceptance criteria)
-  - research/stack-guide.md — "Files to touch" must use its committed project structure (paths under app/), "Testing requirements" its committed test strategy
+  - research/02-engineering/author/stack-guide.md — "Files to touch" must use its committed project structure (paths under app/), "Testing requirements" its committed test strategy
   - runs/<run_tag>/temp/epic-breakdown.md + epics/README.md — your epic's position in the order + the directory format contract
 
   Write epics/<NN>-<slug>/epic.md and one task-<MM>-<slug>.md per task
@@ -176,7 +177,8 @@ prompt: |
   its screen — step 14's blocked-task routing ("continue with tasks
   that don't depend on it") keys off those declared edges.
   Every task's `category:` names the category (or categories) its files
-  belong to, per research/stack-guide.md's ## Code taxonomy. Every
+  belong to, per research/02-engineering/author/stack-guide.md's
+  ## Code taxonomy. Every
   task's `files:` lists the planned repo-relative paths it will create
   or modify (under app/, placed per the taxonomy) — REQUIRED, realistic,
   minimal, never empty: step 14's wave scheduler runs only tasks with
@@ -293,7 +295,7 @@ prompt: |
   5. Both depends_on graphs (epic-level, task-level) are acyclic and reference only existing ids.
   6. Every task file has valid frontmatter (id, epic, status: todo, depends_on, size, category, features, files) and all five body sections non-empty.
   7. Epic count and per-epic task counts within gear range: epics 4–8 / tasks 3–8 (standard); epics 6–12 / tasks 4–10 (premier).
-  8. Sizing rules hold: zero tasks with size: L; every size: M task carries a one-line size justification in ## Context; every `category:` value names a category present in research/stack-guide.md's ## Code taxonomy; every screen implemented by tasks decomposes into subcomponent tasks (or explicit checklist items) plus an assembly task — no single build-the-whole-screen task; every assembly task's depends_on lists ALL of its screen's subcomponent task ids (an assembly task omitting a part is a finding).
+  8. Sizing rules hold: zero tasks with size: L; every size: M task carries a one-line size justification in ## Context; every `category:` value names a category present in research/02-engineering/author/stack-guide.md's ## Code taxonomy; every screen implemented by tasks decomposes into subcomponent tasks (or explicit checklist items) plus an assembly task — no single build-the-whole-screen task; every assembly task's depends_on lists ALL of its screen's subcomponent task ids (an assembly task omitting a part is a finding).
   9. Every task's `files:` is non-empty and lists planned repo-relative paths; an assembly task's `files:` may overlap its subcomponent tasks' `files:` ONLY for the composition file(s) the assembly task owns — any other overlap between an assembly task and its parts is a finding.
 
   FINDINGS SCHEMA:

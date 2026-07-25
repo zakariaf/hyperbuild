@@ -15,7 +15,7 @@ description: >
 
 # Step 4 — Product spec (the PRD)
 
-You are executing step 4 (product-spec) of the hyperbuild pipeline. Steps 2 ∥ 3 (run as the concurrent pair) filled the research vault with competitor dossiers and real-user sentiment, and step 3.5 — your immediate predecessor — adversarially audited their two synthesis docs, annotating weakened claims and moving refuted ones to `Refuted by audit` sections; this step compresses the audited corpus into the single PRD that step 4.5 expands into per-feature specs and that steps 6–8 (design + mockups), 11 (epics), and 14 (implementation) all build from.
+You are executing step 4 (product-spec) of the hyperbuild pipeline. Steps 2 ∥ 3 (run as the concurrent pair) filled the research vault with competitor dossiers and real-user sentiment, and step 3.5 — your immediate predecessor — adversarially audited their two synthesis docs, annotating weakened claims and moving refuted ones to `## Refuted by verification` sections (that exact heading — grep for it, not for any other wording); this step compresses the audited corpus into the single PRD that step 4.5 expands into per-feature specs and that steps 6–8 (design + mockups), 11 (epics), and 14 (implementation) all build from.
 
 **Goal:** write `research/product-spec.md` — personas, differentiators, a fully-traced MoSCoW feature list, and the canonical screen inventory — then have `hb-spec-critic` attack it and patch every finding via Edit.
 
@@ -30,19 +30,25 @@ Read these before doing anything:
 - `runs/<run_tag>/idea.md` — the verbatim app idea. GOSPEL.
 - `runs/<run_tag>/manifest.json` — `run_tag`, `gear` (standard | premier), `platform`; confirm `steps["2"]`, `steps["3"]`, and `steps["3.5"]` are `done`
 - `runs/<run_tag>/decisions/platform.md` — chosen stack + rationale (shapes what screens are idiomatic)
-- `research/competitor-landscape.md` — feature matrix + positioning map (step 2)
-- `research/competitors/<slug>.md` — one dossier per competitor; skim all, deep-read the top 3
-- `research/sentiment-synthesis.md` — ranked pain points + wish lists (step 3)
-- `research/sentiment/<platform>.md` — verbatim user quotes; pull quotes from here, never paraphrase
-- `research/research-audit.md` — step 3.5's per-claim verdicts (`upheld | weakened | refuted`). **THE PRD MUST NOT CITE A CLAIM THE AUDIT REFUTED; a weakened claim may be cited only together with its audit caveat.**
+Everything from steps 2, 3, and 3.5 lives in ONE area — `research/01-product-and-market/` — laid out in the four phases of `docs/RESEARCH-ARCHIVE.md` (`research/` → `verify/` → `critique/` → `author/`). Start at `_INDEX.md`, which lists every agent and file in it.
 
-If `competitor-landscape.md`, `sentiment-synthesis.md`, or `research-audit.md` is missing, the responsible step failed silently — return to the router and resume at the missing step. Do NOT draft a PRD from memory of steps 2–3.5.
+- `research/01-product-and-market/_INDEX.md` — the area map: every agent, grouped by phase, with file sizes and verify verdicts
+- `research/01-product-and-market/author/competitor-landscape.md` — feature matrix + positioning map (step 2)
+- `research/01-product-and-market/research/competitors/<slug>.md` — one dossier per competitor; skim all, deep-read the top 3
+- `research/01-product-and-market/author/sentiment-synthesis.md` — ranked pain points + wish lists (step 3)
+- `research/01-product-and-market/research/sentiment/<platform>.md` — verbatim user quotes; pull quotes from here, never paraphrase
+- `research/01-product-and-market/verify/<dimension>--<claim-slug>.md` — the adversarial fact-checks, one per load-bearing claim, each with a closed-vocabulary verdict (`CONFIRMED | PARTIALLY_TRUE | REFUTED | UNVERIFIABLE`). **A `verify/` file OVERRIDES the `research/` file it checked** (`docs/RESEARCH-ARCHIVE.md` §7): a REFUTED claim MUST NOT appear as fact in the PRD, a PARTIALLY_TRUE claim carries its correction wherever it appears, and an UNVERIFIABLE claim may never be the sole support for a `must`.
+- `research/01-product-and-market/critique/research-audit.md` — step 3.5's per-claim verdicts (`upheld | weakened | refuted`). **THE PRD MUST NOT CITE A CLAIM THE AUDIT REFUTED; a weakened claim may be cited only together with its audit caveat.**
+
+**The `research/` phase is UNVERIFIED by construction.** Read it for breadth, then check `verify/` before you put any version, price, licence, or policy claim into the PRD.
+
+If `author/competitor-landscape.md`, `author/sentiment-synthesis.md`, or `critique/research-audit.md` is missing, the responsible step failed silently — return to the router and resume at the missing step. Do NOT draft a PRD from memory of steps 2–3.5.
 
 ---
 
 ## Procedure
 
-1. **Draft personas (2–4).** Each persona is grounded in sentiment evidence, not invented: name, one-line context, top 2 goals, top 2 frustrations — each frustration backed by a verbatim quote from `research/sentiment/*.md` with the file path. A persona with zero quotes behind it is fiction; cut it.
+1. **Draft personas (2–4).** Each persona is grounded in sentiment evidence, not invented: name, one-line context, top 2 goals, top 2 frustrations — each frustration backed by a verbatim quote from `research/01-product-and-market/research/sentiment/*.md` with the file path. A persona with zero quotes behind it is fiction; cut it.
 
 2. **Build the feature candidate pool from BOTH evidence streams.**
    - From the competitor matrix: features that appear in most competitors (table stakes), features only leaders have (competitive bar), features nobody has that pain points demand (openings).
@@ -86,19 +92,23 @@ If `competitor-landscape.md`, `sentiment-synthesis.md`, or `research-audit.md` i
    ### P1 — <name>
    - Context: ...
    - Goals: ...
-   - Frustrations: "<verbatim quote>" — research/sentiment/reddit.md
+   - Frustrations: "<verbatim quote>"
+     — research/01-product-and-market/research/sentiment/reddit.md
 
    ## Differentiators
-   1. **<differentiator>** — gap: <from competitor-landscape.md>; demand:
-      "<verbatim quote>" — research/sentiment/<platform>.md
+   1. **<differentiator>** — gap: <from author/competitor-landscape.md>; demand:
+      "<verbatim quote>"
+      — research/01-product-and-market/research/sentiment/<platform>.md
 
    ## Features (MoSCoW)
    ### Must
    #### M1 — <feature name>
    - What: ...
    - Why: ...
-   - Evidence: research/competitors/<slug>.md (<competitor> ships this since
-     v<X>); research/sentiment/appstore-reviews.md — > "<verbatim quote>"
+   - Evidence: research/01-product-and-market/research/competitors/<slug>.md
+     (<competitor> ships this since v<X>);
+     research/01-product-and-market/research/sentiment/appstore-reviews.md
+     — > "<verbatim quote>"
    - Screens: <Screen Name>, <Screen Name>
    ### Should
    #### S1 — ... (same shape as M1)
@@ -117,9 +127,10 @@ If `competitor-landscape.md`, `sentiment-synthesis.md`, or `research-audit.md` i
    - <anything evidence couldn't settle — step 4.5 and step 11 read these>
 
    ## Sources
-   - research/competitor-landscape.md — feature matrix consumed
-   - research/sentiment-synthesis.md — pain-point ranking consumed
+   - research/01-product-and-market/author/competitor-landscape.md — feature matrix consumed
+   - research/01-product-and-market/author/sentiment-synthesis.md — pain-point ranking consumed
    - <every dossier and sentiment file actually cited above, one line each>
+   - <every verify/ file whose verdict changed a claim you used — with the verdict>
    ```
 
    This step does no web research — its Sources section lists the vault files it consumed. Every Evidence line in the body must point at a real file written by step 2 or 3; spot-check your own citations before spawning the critic.
@@ -154,11 +165,18 @@ If `competitor-landscape.md`, `sentiment-synthesis.md`, or `research-audit.md` i
      - runs/<run_tag>/idea.md
      - runs/<run_tag>/decisions/platform.md
      - research/product-spec.md
-     - research/competitor-landscape.md
-     - research/sentiment-synthesis.md
-     - spot-check research/competitors/*.md and research/sentiment/*.md
-       wherever the PRD cites them — verify the citation says what the PRD
-       claims it says
+     - research/01-product-and-market/_INDEX.md — the area map: which
+       claims were fact-checked and with what verdict
+     - research/01-product-and-market/author/competitor-landscape.md
+     - research/01-product-and-market/author/sentiment-synthesis.md
+     - spot-check research/01-product-and-market/research/competitors/*.md
+       and research/01-product-and-market/research/sentiment/*.md wherever
+       the PRD cites them — verify the citation says what the PRD claims it
+       says
+     - research/01-product-and-market/verify/*.md — a verify file OVERRIDES
+       the research file it checked (docs/RESEARCH-ARCHIVE.md §7). A PRD
+       claim resting on a REFUTED verdict, or a PARTIALLY_TRUE claim cited
+       without its correction, is a `critical` finding.
 
      ATTACK AXES (check every one):
      - Untraced must/should: any M/S feature with no Evidence line, or an

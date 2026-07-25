@@ -71,7 +71,7 @@ the current set already occupies (the new set must not re-tread it).
 - `runs/<run_tag>/idea.md` — the gospel idea (+ any `## Revisions` entries)
 - `runs/<run_tag>/designs/directions.md` — the live letter ↔ name ↔ slug ↔ research-doc mapping
 - `runs/<run_tag>/designs/{a,b,c}/design-system.md` — the current systems (their H1s are the design names)
-- `research/design/<slug>.md` × 3 — the current directions' research docs
+- `research/03-design-system/research/<slug>.md` × 3 — the current directions' research docs
 - `runs/<run_tag>/temp/mockup-screens.md` — the FROZEN screen list; new directions build exactly these slugs
 - `runs/<run_tag>/designs/archive/round-*/round.md` — previous rounds (names and theses that may NOT be recycled)
 - `runs/<run_tag>/decisions/revisions.md` — the shared revision/round ledger
@@ -100,7 +100,7 @@ several matches → newest by `created`. Then, each failure STOPS and records no
 ### 2. Read the current set and open the round
 
 1. Read `directions.md`, each live `designs/<letter>/design-system.md` H1, and each
-   direction's `## Commitments` in `research/design/<slug>.md`. You need to know what
+   direction's `## Commitments` in `research/03-design-system/research/<slug>.md`. You need to know what
    the current set OCCUPIES — the new slots must not re-tread it.
 2. **Round number:** `N` = 1 + the count of existing `runs/<run_tag>/designs/archive/round-*`
    directories. **This redesign IS round `<N>`** — one number for everything: the live
@@ -212,14 +212,23 @@ mv runs/<run_tag>/designs/<letter>/design-system.md \
    runs/<run_tag>/designs/<letter>/mockups \
    runs/<run_tag>/designs/<letter>/screenshots \
    runs/<run_tag>/designs/archive/round-<N>/<letter>/
-mv research/design/<old-slug>.md \
+mv research/03-design-system/research/<old-slug>.md \
    runs/<run_tag>/designs/archive/round-<N>/<letter>/research-<old-slug>.md
 mv runs/<run_tag>/gates/visual-qa-<letter>.json \
    runs/<run_tag>/designs/archive/round-<N>/<letter>/   # only if it exists
 ```
 
 **Moving the research doc is mandatory, not tidiness:** step 12's check 10 requires
-EXACTLY 3 direction docs in `research/design/`. A fourth left behind fails the gate.
+EXACTLY 3 files under `research/03-design-system/research/` carrying `direction:` +
+`letter:` frontmatter, one per row of `directions.md`. An archived direction's brief left
+behind is a fourth such file and fails the gate. (The SHARED platform-dimension docs in
+that same directory — `framework-render-capability.md`,
+`type-availability-and-licensing.md`, and the premier third — carry no `direction:` key,
+are NOT direction docs, and MUST NOT be moved: they are platform facts that outlive any
+round.) The area's `verify/`, `critique/`, and `author/` files STAY where they
+are — an archived direction's fact-checks are still the honest record of what was
+checked (`docs/RESEARCH-ARCHIVE.md` §7), and this round's new directions add their own
+alongside them. Only the direction brief moves, and only because check 10 counts it.
 
 **Moving the visual-QA record is mandatory for the same class of reason.** The frozen
 screen slugs are identical across rounds, so a round-0 `visual-qa-a.json` still names
@@ -263,8 +272,10 @@ This is step 6.1's naming decision, re-run for the empty slots only, under the r
 constraints. Binding rules, all of them:
 
 1. **Same evidence base as step 6.1** — personas and register from `research/product-spec.md`,
-   the complaints in `research/sentiment-synthesis.md`, unclaimed visual territory in
-   `research/competitor-landscape.md`, and the platform conventions in `decisions/platform.md`.
+   the complaints in `research/01-product-and-market/author/sentiment-synthesis.md`,
+   unclaimed visual territory in
+   `research/01-product-and-market/author/competitor-landscape.md`, and the platform
+   conventions in `decisions/platform.md`.
 2. **The constraints are law**, including the BANNED list. A new direction that trips a
    negative constraint is a failed round before a single spawn.
 3. **Distinctness across the FINAL set** — kept slots included, at step 6.1's bar, not a
@@ -303,9 +314,9 @@ brief so they travel downstream automatically (step 6 pastes the brief verbatim 
 
 | Letter | Name | Slug | Research doc | Origin |
 |--------|------|------|--------------|--------|
-| a | <New Name> | <new-slug> | research/design/<new-slug>.md | round <N> |
-| b | <New Name> | <new-slug> | research/design/<new-slug>.md | round <N> |
-| c | Signal Bloom | signal-bloom | research/design/signal-bloom.md | round 0 (original) — KEPT |
+| a | <New Name> | <new-slug> | research/03-design-system/research/<new-slug>.md | round <N> |
+| b | <New Name> | <new-slug> | research/03-design-system/research/<new-slug>.md | round <N> |
+| c | Signal Bloom | signal-bloom | research/03-design-system/research/signal-bloom.md | round 0 (original) — KEPT |
 
 ## Axis grid
 
@@ -341,7 +352,8 @@ Redo rule: <one line stating why these three could NOT all be called "a clean mi
 ```
 
 If the live `directions.md` predates the axis grid (a run whose step 6 ran before the
-axis format), derive the kept letter's six answers from its `research/design/<slug>.md`
+axis format), derive the kept letter's six answers from its
+`research/03-design-system/research/<slug>.md`
 `## Visual language` section and say so in the round's `round.md`. Never leave a grid
 cell blank: step 6's exit criteria require all six answered for all three letters.
 
@@ -359,7 +371,8 @@ Binding mechanics for every one of these steps:
    named in items 2a and 5 below, which exist because this skill already did those
    sub-steps.
 
-   **2a. Step 6 is entered at 6.3 — SKIP sub-steps 6.1 and 6.2.** Procedure step 6 above
+   **2a. Step 6 is entered at 6.3 and RUNS THROUGH 6.9 — only 6.1 and 6.2 are skipped.**
+   Procedure step 6 above
    already did both: it named the new directions under the round's constraints (6.1) and
    rewrote `directions.md` in 6.2's format with the kept rows and axis answers preserved.
    Running 6.1 as written would name THREE fresh directions and 6.2 would overwrite
@@ -370,9 +383,31 @@ Binding mechanics for every one of these steps:
    `direction_axes`, `signature_candidate`, `reference_points` and `direction_rejects`
    out of the `directions.md` you just wrote), then 6.4 (wait discipline) and 6.5
    (validation) — 6.5 validates the NEW docs plus the kept doc as the live set of three,
-   including its cross-direction distinctness check at the ≥5/6 bar. Step 6's exit
-   criteria then apply to that live set. Say in the plan block that step 6 ran scoped
-   from 6.3.
+   including its cross-direction distinctness check at the ≥5/6 bar.
+
+   **Then KEEP GOING: 6.6 → 6.7 → 6.8 → 6.9. A replacement direction is not exempt from
+   verification.** Its font licences, framework-render claims and guideline numbers are
+   exactly the claims that become `tokens.css` values, and skipping them ships an
+   unchecked direction into step 7 while `author/design-directions.md`, `_INDEX.md` and
+   `claims-03.json` still describe the direction you just archived. Scoped as follows:
+   - **6.6** — register only the NEW directions' claims, merging into the existing
+     `runs/<run_tag>/temp/claims-03.json` by `id` (never truncate the kept direction's or
+     the shared dimensions' entries). An archived direction's entries STAY, with their
+     verdicts — they are the record of what was checked (`docs/RESEARCH-ARCHIVE.md` §7).
+   - **6.7** — rewrite `author/design-directions.md` so its per-direction sections match
+     the live set of three; the kept direction's section is carried over unchanged.
+   - **6.8** — run the engine (V1–V6) scoped to the newly registered claims, PLUS any
+     shared-dimension claim this round invalidated (the platform changed, or a new
+     direction's shape/depth commitment was never adjudicated by the framework
+     dimension). The V4 critique panel re-runs over the live corpus — distinctness is
+     precisely what a redesign round is most likely to break — and V6 rewrites
+     `_INDEX.md` for the live set.
+   - **6.9** — regenerate the `## Corrections that override the research docs` table from
+     the updated `claims-03.json`, so step 7's authors get this round's corrections and
+     not the archived round's.
+
+   Step 6's exit criteria then apply to that live set. Say in the plan block that step 6
+   ran scoped from 6.3 through 6.9.
 3. **The spawn contract is never weakened** — every Task prompt keeps its four pieces
    (verbatim block-quoted idea including any `## Revisions`, pipeline position, specific
    inputs + exact output path, read-first context files), and every spawn adds
@@ -501,7 +536,8 @@ spending another round.
 
 - `runs/<run_tag>/designs/archive/round-<N>/` — `round.md`, a `directions.md` snapshot, and one dir per replaced letter holding its `design-system.md`, `tokens.css`, `mockups/`, `screenshots/`, and moved `research-<slug>.md`
 - `runs/<run_tag>/designs/directions.md` — rewritten: kept rows verbatim, new rows with briefs carrying the round's binding constraints
-- `research/design/<new-slug>.md` — one per new slot (step 6's contract); `research/design/` holds EXACTLY 3 docs afterward
+- `research/03-design-system/research/<new-slug>.md` — one per new slot (step 6's contract); afterward `research/03-design-system/research/` holds EXACTLY 3 files carrying `direction:` + `letter:` frontmatter (plus the untouched shared platform-dimension docs), and each new one brings its claims in `claims-03.json`, its `verify/` fact-checks, its `_INDEX.md` row, and its rows in the `## Corrections that override the research docs` table (step 6.6–6.9, `docs/RESEARCH-ARCHIVE.md`)
+- `research/03-design-system/author/design-directions.md` — rewritten for the live set of three by 6.7 and re-patched by the engine (V5) + 6.9; the archived direction's `verify/`, `critique/` and registry entries stay as the record of what was checked
 - `runs/<run_tag>/designs/<new-letter>/design-system.md` + `tokens.css` + `mockups/*.html` + `screenshots/*.png`
 - `runs/<run_tag>/designs/index.html` — rebuilt gallery, no archive references
 - `runs/<run_tag>/temp/redesign-round-<N>/{scope.md,constraints.md}` — plan + constraints (crash-resume point)
@@ -513,7 +549,8 @@ spending another round.
 
 - Every replaced letter's previous system, tokens, mockups, screenshots, research doc, and `visual-qa-<letter>.json` exist under `designs/archive/round-<N>/`; none of them remain in the live tree
 - Every LIVE letter's `runs/<run_tag>/gates/visual-qa-<letter>.json` was written by this round's 8.5 pass (new letters) or belongs to an untouched kept letter — no file describes an archived design
-- `research/design/` contains EXACTLY 3 direction docs, matching `directions.md`'s three rows
+- `research/03-design-system/research/` contains EXACTLY 3 files with `direction:` + `letter:` frontmatter, matching `directions.md`'s three rows; the shared platform-dimension docs are still there and unmoved
+- Every NEW direction ran the verification engine (6.6→6.9): its claims are in `claims-03.json` with verdicts, its selected claims have `verify/` files, `_INDEX.md` describes the LIVE set, and `author/design-directions.md`'s corrections table names this round's replacements — no artifact still describes only the archived direction
 - Every kept letter's files are byte-identical to before the round
 - Every new letter has `design-system.md` + `tokens.css` + one mockup per frozen slug + one non-empty screenshot per mockup (or manifest `screenshots_skipped: true`), and passed the 8.5 visual QA pass
 - `directions.md` carries the full `## Axis grid` (all six axes answered for all three live letters, the kept letter's answers verbatim), the pairwise-distinctness line, and the redo-rule line, and every new brief has its four blocks (Thesis / Signature element candidate / Reference points / Rejects) plus its round-constraints block

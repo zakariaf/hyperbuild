@@ -37,7 +37,8 @@ output paths; (4) the context files to read before working.
 - **features_dir**: `features/` — one spec per must/should feature
   (`features/00-index.md` is the roster). These are the atomic units
   your assignment check must cover.
-- **stack_guide**: architecture decisions that dictate build order
+- **stack_guide**: `research/02-engineering/author/stack-guide.md` —
+  architecture decisions that dictate build order
   (e.g. data layer before sync; scaffold concerns live in step 13, not
   in your epics).
 - **gear**: `standard` (4–8 epics) or `premier` (6–12 epics).

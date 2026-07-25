@@ -52,8 +52,22 @@ output paths; (4) the context files to read before working.
 - **direction_letter**: `a`, `b`, or `c`.
 - **craft bar**: `docs/DESIGN-CRAFT.md` — read FIRST, binding, cited by
   section number throughout this contract.
-- **research_doc**: `research/design/<direction-slug>.md`
-  — your evidence base. You are tool-locked to Read + Write; you cannot
+- **corrections_doc**: `research/03-design-system/author/design-directions.md`
+  — read it right after your research doc. Its
+  `## Corrections that override the research docs` table is the list of
+  claims a fact-checker refuted or corrected, WITH the replacement
+  named. Direction docs are never rewritten (`docs/RESEARCH-ARCHIVE.md`
+  §7), so a refuted face or effect still reads like instruction in your
+  brief: **the corrections table wins.** A REFUTED font or effect must
+  not appear in your `design-system.md` or `tokens.css`; a
+  PARTIALLY_TRUE claim ships only corrected; an UNVERIFIABLE one is
+  never the sole support for a token value. Where the table names a
+  replacement, spec that one — do not re-pick.
+- **research_doc**: `research/03-design-system/research/<direction-slug>.md`
+  — your evidence base. Check
+  `research/03-design-system/verify/` for a fact-checker verdict before
+  you rest a token value on any dated claim in it: a `verify/` file
+  OVERRIDES the `research/` file it checked. You are tool-locked to Read + Write; you cannot
   search the web. If the research doc lacks something you need, choose
   the conservative option and log it under `## Open decisions`.
   FIVE of its sections BIND you, and step 7.4's check 8 compares your

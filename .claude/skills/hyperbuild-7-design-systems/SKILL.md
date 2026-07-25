@@ -38,7 +38,8 @@ Read these before anything else:
 - `runs/<run_tag>/idea.md` — the verbatim app idea. GOSPEL.
 - `runs/<run_tag>/manifest.json` — `gear`, `platform`
 - `runs/<run_tag>/designs/directions.md` — letter↔name↔slug↔research-doc mapping (step 6)
-- `research/design/<direction-slug>.md` × 3 — skim each doc's `## Commitments` section AND its four IDENTITY sections (`## Visual language` — the six axis answers; `## Signature element`; `## Reference points`; `## What this direction rejects`) so you can validate the authors honored them. Step 6 declares all five BINDING on this step's authors; they are what make the three systems three different products, and 7.4 check 8 verifies they landed
+- `research/03-design-system/author/design-directions.md` — **the corrected brief, and it OVERRIDES the three direction docs.** Step 6.9 built its `## Corrections that override the research docs` table for exactly this step: the direction docs are NEVER rewritten when a claim is refuted, so a refuted font, effect, or guideline number is still sitting in the research doc an author will read as instruction. That table names the replacement. Read it before you fill any spawn, hand it to every author, and check in 7.4 that no REFUTED font/effect survived into a `tokens.css` (`docs/RESEARCH-ARCHIVE.md` §7)
+- `research/03-design-system/research/<direction-slug>.md` × 3 — skim each doc's `## Commitments` section AND its four IDENTITY sections (`## Visual language` — the six axis answers; `## Signature element`; `## Reference points`; `## What this direction rejects`) so you can validate the authors honored them. Step 6 declares all five BINDING on this step's authors; they are what make the three systems three different products, and 7.4 check 8 verifies they landed
 - `runs/<run_tag>/decisions/platform.md` — platform conventions (nav pattern, type availability)
 - `research/product-spec.md` — screen inventory (the components must serve these screens)
 
@@ -138,7 +139,10 @@ prompt: |
   - run_tag: <run_tag>
   - direction_letter: <a|b|c>
   - direction_name: "<Name>"
-  - research_doc: research/design/<direction-slug>.md
+  - research_doc: research/03-design-system/research/<direction-slug>.md
+  - corrections_doc: research/03-design-system/author/design-directions.md
+    — its "## Corrections that override the research docs" table BEATS
+    your research doc wherever they disagree
   - output_dir: runs/<run_tag>/designs/<letter>/
   - outputs: design-system.md AND tokens.css in that directory
 
@@ -149,8 +153,8 @@ prompt: |
     you report back. Its §3 commitments ARE your required-section
     contract below. Its §3.2 table is the font palette you pick from.
   - runs/<run_tag>/idea.md
-  - research/design/<direction-slug>.md — your entire brief. FIVE of its
-    sections BIND you, not just one:
+  - research/03-design-system/research/<direction-slug>.md — your entire
+    brief. FIVE of its sections BIND you, not just one:
       * "## Visual language" — the SIX axis commitments (type
         personality, depth model, shape language, colour strategy,
         density, data & status form). Each one is a decision you
@@ -172,6 +176,18 @@ prompt: |
       * "## What this direction rejects" — a BANNED list. Anything it
         names is a defect in your system, not an option.
       * "## Commitments" — honor every line.
+  - research/03-design-system/author/design-directions.md — READ THIS
+    IMMEDIATELY AFTER YOUR RESEARCH DOC. Your research doc is UNVERIFIED
+    by construction and is NEVER rewritten when a fact-checker refutes
+    it (docs/RESEARCH-ARCHIVE.md §7), so the refuted font, effect, or
+    guideline number is still sitting there reading like instruction.
+    This file's "## Corrections that override the research docs" table
+    is where the correction lives: THE CORRECTIONS TABLE OVERRIDES YOUR
+    DIRECTION DOC, and a REFUTED font or effect MUST NOT appear in
+    design-system.md or tokens.css. A PARTIALLY_TRUE claim ships only in
+    its corrected form; an UNVERIFIABLE one is never the sole support
+    for a token value. If the table names a replacement face or effect,
+    that replacement is what you spec — do not re-pick one yourself.
   - runs/<run_tag>/decisions/platform.md — platform conventions
   - research/product-spec.md — the screen inventory your components serve
   - runs/<run_tag>/designs/directions.md — the axis grid: your
@@ -367,12 +383,13 @@ When all 3 return, run these checks per letter (a, b, c):
    - **Signature tokens:** `grep -c -- '--signature-' tokens.css` ≥ 1.
    - **Motion:** `--motion-fast/base/slow` are three distinct durations and `--easing-standard` ≠ `--easing-emphasized`.
 7. **Documented ⇒ tokenized.** No craft section may describe values it did not tokenize (the first run's core failure). Confirm each of these sections cites at least one `--token` name in its own body: `## Signature element` (a `--signature-*`), `## Typography` (`--font-*` / `--tracking-*`), `## Depth model` (`--shadow-*` or the surface ladder), `## Motion` (`--motion-*` and `--easing-*`), `## Illustration & empty states`, `## Data personality`. A section with prose and no tokens is a defect even if it reads beautifully.
-8. **The direction's identity survived (research doc ⇒ design system).** Step 6 committed each direction to six axis answers, a signature-element candidate, reference points, and a rejects list; without this check none of it has an enforced consumer and the three systems are free to converge. Read `research/design/<direction-slug>.md` side by side with the design system and confirm, naming the quote on each side:
+8. **The direction's identity survived (research doc ⇒ design system).** Step 6 committed each direction to six axis answers, a signature-element candidate, reference points, and a rejects list; without this check none of it has an enforced consumer and the three systems are free to converge. Read `research/03-design-system/research/<direction-slug>.md` side by side with the design system and confirm, naming the quote on each side:
    - **Signature element traces.** `design-system.md`'s `## Signature element` (and the `signature_element` frontmatter key) is the research doc's `## Signature element` device — same device, now specced. A different device is legal ONLY if the section states the departure and justifies it; a device that appears in neither doc's subject matter ("rounded corners", the accent colour, a logo) is a defect.
    - **All six axes honored.** For each axis in the research doc's `## Visual language`, the matching design-system section delivers that answer: type personality → `## Typography` (the family pairing and scale), depth model → `## Depth model` (the named model must be the axis's model, and match the `depth_model` frontmatter enum), shape language → `## Shape language` (the radius rhythm and the named shape move), colour strategy → `## Color` (where colour comes from and what it is for), density → `## Spacing` + the component sizing, data & status form → `## Data personality` (its ≥2 drawn forms). A silently swapped axis — a "crisp offset" direction shipping layered shadows, a "radial ring + segmented bar" direction shipping status pills only — is a defect even when the section is well written.
    - **Nothing on the rejects list shipped.** Grep the system for each item in `## What this direction rejects`; a rejected face, hue family, container vocabulary, or cliché appearing in the tokens is a defect.
+9. **Verification corrections landed (`docs/RESEARCH-ARCHIVE.md` §7).** Open `research/03-design-system/author/design-directions.md`'s `## Corrections that override the research docs` table and walk it row by row against all three systems: no REFUTED font, effect, or number appears anywhere in a `design-system.md` or `tokens.css`; every PARTIALLY_TRUE claim ships in its CORRECTED form (the exact version/licence/number, not the researcher's original); no UNVERIFIABLE claim is the sole support for a token value. `grep -i "<the refuted face or effect>" runs/<run_tag>/designs/*/tokens.css runs/<run_tag>/designs/*/design-system.md` must return nothing for each REFUTED row. A hit is a defect even when the direction doc still says otherwise — the direction docs were deliberately not rewritten, which is exactly why this check exists.
 
-Failures: re-spawn the offending author ONCE with the exact failed checks named, quoting its own `## Commitments`, the axis answer or signature device it dropped (check 8), and the DESIGN-CRAFT §§ it missed. If a MECHANICAL gap survives twice (a renamed token, a missing dark block, an absent H2), fix it yourself via Edit and log the patch in `runs/<run_tag>/temp/orchestrator-notes.md`. If a CRAFT gap survives twice (checks 6–8), do NOT invent the design from the orchestrator seat — log it in `runs/<run_tag>/temp/orchestrator-notes.md` as a named defect for step 8.5 and surface it at the design gate.
+Failures: re-spawn the offending author ONCE with the exact failed checks named, quoting its own `## Commitments`, the axis answer or signature device it dropped (check 8), the correction row it ignored (check 9), and the DESIGN-CRAFT §§ it missed. If a MECHANICAL gap survives twice (a renamed token, a missing dark block, an absent H2, or a check-9 correction whose replacement the table already names), fix it yourself via Edit and log the patch in `runs/<run_tag>/temp/orchestrator-notes.md`. If a CRAFT gap survives twice (checks 6–8), do NOT invent the design from the orchestrator seat — log it in `runs/<run_tag>/temp/orchestrator-notes.md` as a named defect for step 8.5 and surface it at the design gate.
 
 ### Step 7.5 — The ANTI-SAMENESS check (cross-letter)
 

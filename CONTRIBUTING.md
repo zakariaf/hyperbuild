@@ -1,7 +1,7 @@
 # Contributing
 
-hyperbuild is a **prompt-architecture project**: the "source code" is markdown — 20 skill
-directories under `.claude/skills/` and 19 `hb-*` agent definitions under
+hyperbuild is a **prompt-architecture project**: the "source code" is markdown — 23 skill
+directories under `.claude/skills/` and 22 `hb-*` agent definitions under
 `.claude/agents/`. A contribution here is an edit to a contract that a running pipeline
 will obey literally, hours into an autonomous run, possibly after context compaction has
 eaten everything except the file you touched. Edit accordingly.
@@ -10,7 +10,7 @@ Three documents anchor everything:
 
 - **[docs/SPEC.md](docs/SPEC.md)** — the design source of truth. If a proposed change
   contradicts the spec, the change is wrong or the spec needs a PR first.
-- **[PIPELINE.md](PIPELINE.md)** — the architecture reference: the 9 principles, every
+- **[PIPELINE.md](PIPELINE.md)** — the architecture reference: the 11 principles, every
   step's contract, the state layout, both gates, the spawn contract, and the lineage
   table back to [hyperresearch](https://github.com/jordan-gibbs/hyperresearch).
 - **[README.md](README.md)** — the front door: pipeline tables, agent roster, gear knobs.
@@ -23,7 +23,7 @@ Three documents anchor everything:
   invoked via `Skill()` and loaded fresh at the moment it runs. `hyperbuild-choose` is
   the human checkpoint; `hyperbuild-revise` and `hyperbuild-redesign` are the two other
   gate-time command skills. 19 + router + 3 command skills = 23 skill directories.
-- **Agents are capability contracts.** The 20 subagents in `.claude/agents/hb-*.md`
+- **Agents are capability contracts.** The 22 subagents in `.claude/agents/hb-*.md`
   carry tool lists that are the *enforcement mechanism*, not documentation: critics
   have no Edit/Write and physically cannot fix what they find; `hb-patcher` has no
   Write and physically cannot regenerate a file. Never "helpfully" widen an agent's
