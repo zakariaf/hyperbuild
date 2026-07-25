@@ -1,7 +1,7 @@
 {
   "name": "hyperbuild",
   "displayName": "Hyperbuild",
-  "description": "Turns Claude Code into an app factory: one idea prompt in, a researched, designed, planned, and implemented application out, with exactly two human touchpoints. /hyperbuild <idea> runs a 14-step autonomous Stage A — market recon, social sentiment mining, a research audit, PRD and feature specs, stack research, three complete design systems with HTML mockups of every screen, project-specific skill generation, and epics/tasks — then stops at a design gate. /hyperbuild-choose a|b|c runs Stage B: scaffold, wave-parallel implementation with git discipline, adversarial review, and a traceability ship gate that ends in a working app.",
+  "description": "Turns Claude Code into an app factory: one idea prompt in, a researched, designed, planned, and implemented application out, with exactly two human touchpoints. /hyperbuild <idea> runs a 19-step autonomous Stage A \u2014 market recon, social sentiment mining, a research audit, PRD and feature specs, stack research, three complete design systems with HTML mockups of every screen, adversarial VISUAL QA that opens every rendered screenshot before you do, project-specific skill generation, and epics/tasks \u2014 then stops at a design gate. At that gate you also get two levers: /hyperbuild-revise <change> reworks the idea, a feature, one direction's look, or the epic split, and /hyperbuild-redesign [notes] regenerates the design directions (keeping any letters you name). /hyperbuild-choose a|b|c runs Stage B: scaffold, wave-parallel implementation with git discipline, adversarial review, and a traceability ship gate that ends in a working app.",
   "version": "0.1.0",
   "author": {
     "name": "Zakaria Fatahi"

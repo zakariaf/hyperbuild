@@ -19,6 +19,10 @@ Two steps only:
 
 ## Architecture principles (inherited from hyperresearch — cite these in PIPELINE.md)
 
+These nine are ported from hyperresearch. PIPELINE.md carries a tenth that is
+hyperbuild's own — **DESIGN CRAFT IS GATED** (see "Design craft" below) — for ten
+principles total.
+
 1. **Router + step skills.** The entry skill `hyperbuild` is a thin ROUTER: bootstrap,
    sequence, recover. It never does step work. Each pipeline step is its own skill,
    invoked via `Skill(skill: "hyperbuild-N-name")`, loaded fresh into context at the
@@ -58,11 +62,13 @@ Two steps only:
 hyperbuild/
 ├── README.md            # banner-style: what it is, install-free quickstart, pipeline table, agent roster
 ├── CLAUDE.md            # project memory: "this repo is the hyperbuild harness", entry points, layout
-├── PIPELINE.md          # deep architecture doc: the 16 steps, the principles, hyperresearch lineage
+├── PIPELINE.md          # deep architecture doc: the 19 steps, the principles, hyperresearch lineage
 ├── .claude/
 │   ├── skills/
 │   │   ├── hyperbuild/SKILL.md               # ROUTER (entry)
 │   │   ├── hyperbuild-choose/SKILL.md        # human checkpoint #2 (records choice, resumes router)
+│   │   ├── hyperbuild-revise/SKILL.md        # gate-time: rework ONE direction, re-park at the gate
+│   │   ├── hyperbuild-redesign/SKILL.md      # gate-time: rebuild all 3 directions, re-park at the gate
 │   │   ├── hyperbuild-1-intake/SKILL.md
 │   │   ├── hyperbuild-2-market-recon/SKILL.md
 │   │   ├── hyperbuild-3-social-mining/SKILL.md
@@ -73,6 +79,7 @@ hyperbuild/
 │   │   ├── hyperbuild-6-design-research/SKILL.md
 │   │   ├── hyperbuild-7-design-systems/SKILL.md
 │   │   ├── hyperbuild-8-mockups/SKILL.md
+│   │   ├── hyperbuild-8-5-visual-qa/SKILL.md
 │   │   ├── hyperbuild-9-skill-research/SKILL.md
 │   │   ├── hyperbuild-10-skill-forge/SKILL.md
 │   │   ├── hyperbuild-11-epics/SKILL.md
@@ -82,7 +89,8 @@ hyperbuild/
 │   │   ├── hyperbuild-15-adversarial-review/SKILL.md
 │   │   └── hyperbuild-16-ship-gate/SKILL.md
 │   └── agents/
-│       └── (19 agent files, listed below)
+│       └── (20 agent files, listed below)
+├── docs/DESIGN-CRAFT.md # the BINDING visual craft bar (steps 6, 7, 8, 8.5)
 ├── runs/README.md       # explains run workspaces (dir created at runtime)
 ├── research/README.md   # explains the research vault (content created by steps 2-9)
 ├── features/README.md   # explains the feature-spec format (content created by step 4.5)
@@ -106,9 +114,11 @@ runs/<run_tag>/
 │       └── screenshots/<screen>.png   # headless-Chrome renders of every mockup (step 8)
 ├── decisions/
 │   ├── platform.md            # chosen stack + rationale (step 1)
-│   └── design-choice.md       # written by /hyperbuild-choose
+│   ├── design-choice.md       # written by /hyperbuild-choose
+│   └── revisions.md    # appended by /hyperbuild-revise + /hyperbuild-redesign
 └── gates/
     ├── design-gate-report.md  # step 12
+    ├── visual-qa-{a,b,c}.json # step 8.5 — per-direction visual QA findings
     └── ship-report.md         # step 16
 ```
 
@@ -168,13 +178,15 @@ frontmatter); the step 12 gate checks every must/should feature file exists and 
 covered by ≥1 task; step 14 implementers read the feature file as primary spec alongside
 the task file.
 
-## The 16-step pipeline (two stages)
+## The 19-step pipeline (two stages)
+
+16 numbered steps plus the half-steps 3.5, 4.5 and 8.5.
 
 ### STAGE A — PLAN (autonomous, `/hyperbuild <idea>`)
 
 | # | Skill | What it does | Spawns (parallel) |
 |---|-------|--------------|-------------------|
-| 1 | hyperbuild-1-intake | Verbatim idea → `idea.md`; mint run_tag (slug + 6 random hex chars, e.g. `habit-coach-3f9a2c`); resolve platform (stated > inferred; record rationale in `decisions/platform.md`); write scaffold.md; init manifest.json; seed TodoWrite with all 16 steps | — |
+| 1 | hyperbuild-1-intake | Verbatim idea → `idea.md`; mint run_tag (slug + 6 random hex chars, e.g. `habit-coach-3f9a2c`); resolve platform (stated > inferred; record rationale in `decisions/platform.md`); write scaffold.md; init manifest.json; seed TodoWrite with every step (1–16 incl. the half-steps 3.5, 4.5 and 8.5) plus the checkpoint todo = 20 todos | — |
 | 2 | hyperbuild-2-market-recon | Competitor discovery → latest versions, feature sets, changelogs, pricing → per-competitor dossiers + `competitor-landscape.md` with feature matrix | 1 hb-competitor-scout, then 6–10 hb-competitor-analyst (one per competitor) |
 | 3 | hyperbuild-3-social-mining | What real users say: Reddit, HN, app-store reviews, LinkedIn/X, forums → pain points, wish lists, praised features, ranked by frequency × intensity → `sentiment-synthesis.md` | 4 hb-sentiment-miner (one per platform group) |
 | 3.5 | hyperbuild-3-5-research-audit | ADVERSARIAL RESEARCH AUDIT (runs after 2 AND 3 both complete): 1 hb-research-critic attacks `competitor-landscape.md` + `sentiment-synthesis.md` — tries to REFUTE the top pain points and wish-list items (cherry-picked? one viral thread reposted five times? syndication is not consensus — cluster derivative copies, they argue with the weight of ONE source), spot-checks version/feature claims against live sources, flags anything unsupported → `research/research-audit.md`; orchestrator patches the synthesis docs per confirmed findings (claims downgraded/annotated, never silently deleted) | 1 hb-research-critic |
@@ -184,6 +196,7 @@ the task file.
 | 6 | hyperbuild-6-design-research | Propose exactly 3 named design directions suited to this app + audience (reading product-spec.md + the feature specs) (e.g. "Soft Focus", "Swiss Utility", "Neon Playful"); per direction: HARVEST-FIRST (public design-system repos, open token sets, HIG/Material resources), then deep research: typography, color theory, motion, component patterns | 3 hb-design-researcher (one per direction) |
 | 7 | hyperbuild-7-design-systems | Build the 3 full design systems: `design-system.md` + `tokens.css` per direction — type scale, color palette (light+dark), spacing, radii, elevation, component specs (buttons, cards, inputs, nav, lists, empty states). tokens.css uses the three-layer token structure (primitive → semantic → component) unless the direction's research argues otherwise | 3 hb-design-system-author (one per direction) |
 | 8 | hyperbuild-8-mockups | For every `full`/`partial` screen in the PRD inventory × each of 3 designs: a self-contained HTML mockup (inline CSS from tokens, REAL content and flows from the PRD + the relevant `features/*.md` specs — never lorem ipsum, phone-frame wrapper for mobile; `partial` screens: real HUD/chrome/overlays over a clearly-marked placeholder viewport; `none` screens: no mockup — instead an art-direction card in that design's design-system.md (mood, palette applied, HUD typography, reference language)). THEN the orchestrator renders `screenshots/<screen>.png` for every mockup via headless Chrome (`chrome --headless=new --screenshot=<out> --window-size=390,844 file://<mockup>` — desktop apps use a desktop viewport; if Chrome is missing, log a warning in the manifest and continue — screenshots become a design-gate warning, not a hard fail). Finally `designs/index.html` gallery (side-by-side iframes per screen, design names, jump nav) | 3–6 hb-mockup-smith (screens split per design) |
+| 8.5 | hyperbuild-8-5-visual-qa | VISUAL DESIGN QA — the only step that LOOKS at what was drawn. Runs after step 8 is done (its sole input is step 8's renders, so it is invoked once both members of the 8 ∥ 9 pair return; it is NOT a third concurrent member). One `hb-design-critic` per direction, each with Read access to that direction's `screenshots/*.png` + `mockups/*.html` + `design-system.md` + `docs/DESIGN-CRAFT.md`, OPENS every screenshot and grades: (a) CRAFT — the 12 banned AI-design tells, signature element on ≥3 screens, display≠body type families, the declared depth model actually applied, ≥3 radii + the named shape move, hue-biased neutrals + scarce accent, CSS-drawn empty-state art, ≥2 data-personality forms; (b) LAYOUT INTEGRITY — nothing clipped, no FAB/sheet over a list row, nav label or CTA, deliberate truncation only (no `12d lef`), no horizontal page scroll, tap targets ≥44×44, body ≥15px at ≥4.5:1, spacing from the scale, real PRD content, safe areas drawn, dark mode holds, and ONE nav component + one destination set + one icon set + one status-bar treatment across the direction (no app tab bar on onboarding/modal/camera routes); (c) CONFORMANCE + DISTINCTNESS — every binding rule the direction's own design-system.md states, verified against the renders, then the three directions compared on PIXELS (name 3 structural differences without mentioning color; palette-only differences FAIL) → `runs/<run_tag>/gates/visual-qa-{a,b,c}.json`. Critics NEVER edit: each defect re-spawns the `hb-mockup-smith` that drew that screen with the screenshot path + the rule named, then the orchestrator re-renders and re-critiques. MAX 2 critic rounds = exactly ONE patch round (stricter than the ≤3 gate-fix-round budget); unresolved defects carry into the step 12 report as explicit warnings, and an accepted-known-issue critical is legal only once both rounds are spent | 3 hb-design-critic (one per direction) |
 | 9 | hyperbuild-9-skill-research | HARVEST-FIRST (clone `zakariaf/Flutter-Skills` — the canonical anatomy exemplar — plus `anthropics/skills` + top community collections), then research Claude Code skill authoring: SKILL.md format, frontmatter, progressive disclosure (SKILL.md core + references/ + examples/ + scripts/ check gates), richness norms → `skill-authoring-guide.md` incl. a shortlist of harvested skills adaptable in step 10 (with licenses) | 1–2 hb-stack-researcher spawns |
 | 10 | hyperbuild-10-skill-forge | Generate PROJECT-SPECIFIC skills into `.claude/skills/` from stack-guide + PRD: `app-code-style`, `app-architecture`, `app-testing`, `app-components` (wires chosen design tokens later), `app-review-checklist`. Each uses the RICH four-part anatomy (SKILL.md core + references/ + examples/ in the target language + scripts/ PASS-FAIL gates — see "Two kinds of skills"). ADAPT harvested skills from step 9's shortlist where they fit (license-checked, attributed; for Flutter apps, zakariaf/Flutter-Skills is the primary source); write from zero only for gaps | 5 hb-skill-smith (one per skill) |
 | 11 | hyperbuild-11-epics | The full backlog: `epics/00-overview.md` (epic list, dependency order, PRD coverage matrix) + one dir per epic: `epics/NN-<slug>/epic.md` (goal, scope, out-of-scope, depends_on, acceptance criteria) + one `NN-<slug>/task-NN-<slug>.md` per task (frontmatter: id, epic, status: todo, depends_on, size; body: context, spec, files to touch, testing requirements, definition of done; frontmatter also carries `features: [F-NN]` — the feature ids the task implements — and `files: [<planned paths>]` — the machine-readable list of files the task will create/modify, which step 14's wave scheduler uses to run only non-overlapping tasks in parallel). Every feature file (and thus every must/should PRD feature) maps to ≥1 task | 1 hb-epic-planner (breakdown), then 3–6 hb-task-author (one per epic batch), then hb-spec-critic coverage audit |
@@ -196,6 +209,38 @@ copies chosen `tokens.css` + design-system.md to `app/design/` (path recorded); 
 manifest (`design_choice`, stage=BUILD); optional second arg overrides platform (then
 re-run steps 5, 10, 11 before building — document this); finally invokes
 `Skill(skill: "hyperbuild")` — the router's resume logic takes over and drives Stage B.
+
+### GATE-TIME DESIGN COMMANDS — `/hyperbuild-revise`, `/hyperbuild-redesign`
+
+Two sibling command skills (`hyperbuild-revise`, `hyperbuild-redesign`), same
+preconditions as the checkpoint: they apply ONLY to a run parked at the design gate
+(`stage: "PLAN"`, `steps["12"] == "done"`, `blocked_on: "design-choice"`) and refuse,
+with a stated reason, in every other state.
+
+- `/hyperbuild-revise <plain-English change>` — takes a free-form request and CLASSIFIES
+  it into one of four scopes, applying only that scope's blast radius:
+  **idea** (append a dated `## Revisions` entry to `idea.md`, then PRD + feature specs +
+  everything downstream that depends on them) · **feature** (surgical edits to
+  `features/NN-*.md` + `00-index.md` + the matching PRD rows, then the affected epics) ·
+  **design** (a tweak to ONE direction that stays itself: step 7 for that letter, its
+  smiths, its screenshots, step 8.5 scoped to it) · **epics** (step 11 re-run under a
+  stated constraint). A request for new or replacement DIRECTIONS is handed off to
+  `/hyperbuild-redesign`. Always ends with step 12.
+- `/hyperbuild-redesign [notes]` — regenerates the design directions from free-form
+  notes, parsing KEEP/REPLACE (`keep c, replace a and b`): every slot by default, or only
+  the letters not kept. Kept letters survive untouched (letter, system, tokens, mockups,
+  screenshots); replaced slots are archived under `designs/archive/round-<N>/`, then
+  6 → 7 → 8 → 8.5 → 12 re-run for the new letters only. Research, feature specs, epics,
+  and generated skills survive; only `runs/<run_tag>/designs/` is rebuilt.
+
+Both: mark the steps they invalidate `"redo"` in the manifest; append the user's steer to
+the shared ledger `runs/<run_tag>/decisions/revisions.md` (one entry per invocation); END
+by re-parking the run at the design gate with a fresh gate report. `idea.md`'s frontmatter
+and verbatim idea body are IMMUTABLE (the idea is gospel) — `/hyperbuild-revise` at IDEA
+scope may only APPEND a dated `## Revisions` entry below them, which is how the change
+reaches every downstream spawn (each one block-quotes the idea body). The ONE-stop rule is
+preserved: taste iterates at the stop that already exists, and only `/hyperbuild-choose`
+releases Stage B.
 
 ### STAGE B — BUILD (autonomous)
 
@@ -210,7 +255,7 @@ re-run steps 5, 10, 11 before building — document this); finally invokes
 
 Mirror hyperresearch's router structure (READ IT: `src/hyperresearch/skills/hyperresearch.md`):
 - frontmatter: name + description ("turns one app idea into a researched, designed,
-  planned, implemented app via a 16-step two-stage pipeline; this skill is a ROUTER...")
+  planned, implemented app via a 19-step two-stage pipeline; this skill is a ROUTER...")
 - "How the chain works" section w/ Skill() invocation mechanics + why (context rot)
 - The two-stage step table
 - Bootstrap procedure (mint run_tag; idea.md; manifest; scaffold; TodoWrite seeding; then Skill 1)
@@ -222,13 +267,22 @@ Mirror hyperresearch's router structure (READ IT: `src/hyperresearch/skills/hype
   (market recon and social mining share no inputs) and steps 8 ∥ 9 (mockups and skill
   research share no inputs) run CONCURRENTLY — the orchestrator drives both step skills'
   spawn waves in the same block, tracks both in the manifest independently, and proceeds
-  only when BOTH exit criteria are met (3.5 needs 2 and 3; 10 needs 9; 11 needs 8's
-  gallery only at gate time). Recovery rule: on resume, an unfinished member of a pair
-  re-runs alone. No other steps may overlap — recovery complexity is why.
+  only when BOTH exit criteria are met (3.5 needs 2 and 3; 8.5 needs 8; 10 needs 9; 11
+  needs 8's gallery only at gate time). Recovery rule: on resume, an unfinished member of
+  a pair re-runs alone. No other steps may overlap — recovery complexity is why. Step 8.5
+  is NOT a third concurrent member: it consumes step 8's renders only, so it is invoked
+  once both members of the 8 ∥ 9 pair have returned, per the Stage A order
+  `(8 ∥ 9) → 8.5 → 10`, and on recovery it re-runs alone whenever 8 is done and 8.5 is not.
+- A **Commands** section: the four user-facing commands (`/hyperbuild <idea>`,
+  `/hyperbuild-choose <a|b|c> [platform]`, `/hyperbuild-revise <plain-English change>`
+  with its four scopes, `/hyperbuild-redesign [notes]` with its KEEP/REPLACE parsing),
+  with the gate-only precondition stated on the last two and the note that the router
+  never invokes any of them itself
 - The canonical rules (numbered, ALL-CAPS lead-ins like hyperresearch):
   bare-text rule, idea-is-gospel, spawn contract, sequential-steps/parallel-within
   (except the two named concurrent pairs), patch-never-regenerate (Stage B),
-  the-gate-is-final, ONE-stop-only (design gate), git-is-the-safety-net (Stage B)
+  the-gate-is-final, ONE-stop-only (design gate), git-is-the-safety-net (Stage B),
+  DESIGN-CRAFT-IS-GATED (steps 6/7/8/8.5 — see "Design craft" below)
 - Subagent spawn contract section
 - "Now begin" closer
 
@@ -251,7 +305,7 @@ Mirror hyperresearch's router structure (READ IT: `src/hyperresearch/skills/hype
 Default gear: `standard`. The user opts into premier by saying "premier" in the idea
 prompt; step 1 records `gear` in manifest; steps read it.
 
-## Agent roster — `.claude/agents/hb-*.md` (19 files)
+## Agent roster — `.claude/agents/hb-*.md` (20 files)
 
 Frontmatter format (Claude Code agents):
 ```
@@ -276,6 +330,7 @@ model: sonnet | opus | inherit
 | hb-design-researcher | sonnet | WebSearch, WebFetch, Read, Write, Bash | Deep research ONE design direction: reference systems, typography, color, motion, accessibility; HARVEST-FIRST (public design-system repos/token sets, then gap-fill) |
 | hb-design-system-author | opus | Read, Write | Author ONE complete design system (design-system.md + tokens.css) from its research doc |
 | hb-mockup-smith | sonnet | Read, Write | Build self-contained HTML mockups for assigned screens in ONE design; real PRD content; tokens.css inlined |
+| hb-design-critic | opus | Read, Grep, Glob, Write | Step 8.5 visual QA of ONE direction: READS (views) every `screenshots/*.png` render and grades craft + layout integrity against `docs/DESIGN-CRAFT.md` and the direction's own design-system.md, plus cross-direction distinctness on pixels; findings JSON at `gates/visual-qa-<letter>.json`; NEVER edits mockups |
 | hb-skill-smith | opus | Read, Write, WebSearch, WebFetch, Bash | Write ONE generated Claude Code skill per the skill-authoring-guide; adapts a harvested existing skill when one fits (license-checked), writes from zero only for gaps |
 | hb-epic-planner | opus | Read, Write | PRD → epic breakdown w/ dependency order + coverage matrix |
 | hb-task-author | sonnet | Read, Write | Write full task files for ONE epic (spec, files, testing, DoD) |
@@ -337,6 +392,37 @@ easier to review, and easier to implement with focus. Three binding rules:
    files within a wave; a full-suite + skill-gates sync point between waves (never start
    a wave on red); epic-completion critic passes unchanged; contracts/foundation tasks
    first via the DAG. Parallel within a wave, honest gates between waves.
+
+## Design craft (binding for steps 6, 7, 8, 8.5)
+
+The visual craft bar lives in **`docs/DESIGN-CRAFT.md`** and is BINDING, not advisory.
+Every step-6/7/8/8.5 spawn prompt cites it BY PATH in its CONTEXT FILES list, and every
+`hb-design-researcher`, `hb-design-system-author`, `hb-mockup-smith`, and
+`hb-design-critic` reads it before producing anything. Its violations are DEFECTS, not
+taste disagreements: they are re-spawned or patched like any other failed check. What it
+contains, in short — the full rules live in the file, which is the single source of truth:
+
+1. **The bar** — a design someone would screenshot and share, with every choice traceable
+   to this app's subject and audience. Three directions must feel like three products.
+2. **Banned AI-design tells** (§2) — 12 named defaults (cream+serif+terracotta, near-black
+   + one acid pop, purple→blue gradient hero, Inter/Space Grotesk reflex, emoji as art,
+   everything centered, one uniform radius, flat white card + hairline, Material-blue,
+   traffic-light-as-palette, placeholder copy, undifferentiated triples).
+3. **Eight required design-system commitments** (§3) — signature element, display+body
+   type pairing on a stated scale, ONE named depth model, radius rhythm + a distinctive
+   shape move, hue-biased neutrals with separate status tokens, CSS-drawn empty-state and
+   key-moment art, data personality, motion notes.
+4. **Layout integrity** (§4) — mechanical, checkable facts about the HTML, each one a bug
+   the first real run shipped: nothing clipped, no FAB over a list row, deliberate
+   truncation only, no horizontal page scroll, ≥44×44 tap targets, ≥15px body at ≥4.5:1,
+   spacing from the scale, real content, safe areas, aligned gutters, dark mode holds.
+5. **A 25-item self-check** (§5) run literally before any mockup is called done.
+
+The second half of the principle is enforcement: **a rendered screen nobody looked at is
+not a finished design.** Step 8.5 is the step with eyes — it exists because the first real
+run rendered 30 screens that no step ever opened, and the human gate was the first place
+anyone saw the clipped rows and the floating action button sitting on top of the primary
+CTA. Craft rules graded only against the design system's own prose are self-certification.
 
 ## Harvest-first research protocol (binding for steps 5, 6/7, 9, 10)
 
@@ -443,12 +529,16 @@ structural enforcement, not prompted good intentions.
   `/hyperbuild-choose b`), the pipeline table, agent roster table, layout diagram,
   scale gears, "what it doesn't do" honesty section (needs the platform SDKs installed —
   flutter/Xcode/node; research quality depends on web access; you still review the code).
-- **CLAUDE.md**: short; this repo is the hyperbuild harness; entry `/hyperbuild`;
-  resume rule (check runs/*/manifest.json); never edit files under runs/ by hand;
-  epics/ and app/ are pipeline-owned.
+- **CLAUDE.md**: short; this repo is the hyperbuild harness; entry points
+  (`/hyperbuild`, `/hyperbuild-choose`, and the gate-only `/hyperbuild-revise` +
+  `/hyperbuild-redesign`); resume rule (check runs/*/manifest.json); never edit files
+  under runs/ by hand; epics/ and app/ are pipeline-owned.
 - **PIPELINE.md**: the architecture doc — principles above, per-step deep description,
   state layout, gate specs, spawn contract, lineage notes mapping each mechanism to the
   hyperresearch mechanism that inspired it.
+- **docs/DESIGN-CRAFT.md**: the BINDING visual craft bar for steps 6, 7, 8, 8.5 (see
+  "Design craft" above). Cited by path in every design spawn prompt; graded by
+  `hb-design-critic` at step 8.5.
 - **runs/README.md**, **epics/README.md**: format contracts for their directories.
 
 ## Quality bar

@@ -2,10 +2,11 @@
 name: hyperbuild
 description: >
   Turns ONE app idea into a fully researched, designed, planned, and implemented
-  application via the hyperbuild 18-step, two-stage pipeline: Stage A — PLAN
+  application via the hyperbuild 19-step, two-stage pipeline: Stage A — PLAN
   (steps 1–12, autonomous: market recon, social mining, adversarial research
   audit, PRD, feature specs,
   stack research, 3 complete design systems with HTML mockups of every screen,
+  adversarial VISUAL QA of every rendered screen,
   project-specific generated skills, epics/tasks) → ONE human checkpoint
   (`/hyperbuild-choose <a|b|c>`) → Stage B — BUILD (steps 13–16, autonomous:
   scaffold, implement, adversarial review, ship gate). This entry skill is a
@@ -63,6 +64,7 @@ each step is self-contained and re-derives its inputs from disk.
 | 6 | `hyperbuild-6-design-research` | Propose exactly 3 named design directions; deep research each | 3 hb-design-researcher |
 | 7 | `hyperbuild-7-design-systems` | 3 full design systems: `design-system.md` + `tokens.css` per direction | 3 hb-design-system-author |
 | 8 | `hyperbuild-8-mockups` | Every mockable PRD screen × 3 designs as self-contained HTML + headless-Chrome `screenshots/<screen>.png` renders + `designs/index.html` gallery | 3–6 hb-mockup-smith |
+| 8.5 | `hyperbuild-8-5-visual-qa` | VISUAL DESIGN QA (runs only after step 8 is done): one critic per direction VIEWS every rendered `screenshots/<screen>.png` and judges it against `docs/DESIGN-CRAFT.md` + that direction's own `design-system.md` — craft (signature element, display/body type pairing, depth model, shape language, data personality, empty-state art) and layout integrity (clipping, FAB/nav overlap, deliberate truncation, tap targets, contrast, safe areas), plus the cross-direction distinctness check judged on PIXELS, not on prose → `gates/visual-qa-{a,b,c}.json`; every defect re-spawns the responsible `hb-mockup-smith` with the named screenshot + defect, re-renders, re-critiques (≤2 critic rounds = exactly ONE patch round; what survives is written down and shown to the user, never looped on) | 3 hb-design-critic |
 | 9 | `hyperbuild-9-skill-research` | Claude Code skill authoring research → `skill-authoring-guide.md` | 1–2 hb-stack-researcher |
 | 10 | `hyperbuild-10-skill-forge` | Generate project-specific skills into `.claude/skills/`: app-code-style, app-architecture, app-testing, app-components, app-review-checklist | 5 hb-skill-smith |
 | 11 | `hyperbuild-11-epics` | Full backlog: `epics/00-overview.md` + per-epic dirs with task files; every must/should feature → ≥1 task | 1 hb-epic-planner, then 3–6 hb-task-author, then hb-spec-critic |
@@ -85,12 +87,37 @@ router. You never invoke `hyperbuild-choose` yourself — the user does.
 
 ---
 
+## Commands (what the USER may type — you never invoke these yourself)
+
+| Command | Applies when | What it does |
+|---|---|---|
+| `/hyperbuild <idea>` | no unfinished run exists | Bootstrap + drive Stage A to the design gate. |
+| `/hyperbuild-choose <a\|b\|c> [platform]` | run parked at the design gate | Records the choice, releases Stage B. |
+| `/hyperbuild-revise <plain-English change>` | run parked at the design gate | Change something before the build starts. The skill CLASSIFIES the free-form request into one of four scopes and applies only that scope's blast radius: **idea** (a dated `## Revisions` entry appended to `idea.md`, then PRD + feature specs + everything downstream) · **feature** (surgical edits to `features/*.md` + `00-index.md` + the PRD rows, then the affected epics) · **design** (a tweak to ONE direction that stays itself: step 7 for that letter, its smiths, its screenshots, step 8.5 scoped) · **epics** (step 11 re-run under a stated constraint). New/replacement directions are handed off to `/hyperbuild-redesign`. Always re-runs step 12. |
+| `/hyperbuild-redesign [notes]` | run parked at the design gate | Regenerates the design directions from the user's free-form notes — every slot by default, or only the letters they don't KEEP (`keep c, replace a and b`). Kept letters survive untouched: same letter, system, tokens, mockups and screenshots. Replaced slots are archived under `designs/archive/round-<N>/`, then 6 → 7 → 8 → 8.5 → 12 re-run for the new letters only. Research, feature specs, epics, and generated skills all survive — only the designs are rebuilt. |
+
+BOTH design commands apply **only to a run parked at the design gate**
+(`stage: "PLAN"`, `steps["12"] == "done"`, `blocked_on: "design-choice"`). In
+any other state they refuse and say why — they are not a mid-Stage-B escape
+hatch. The verbatim idea body and frontmatter in `idea.md` are IMMUTABLE — never
+reworded, reordered, or "reconciled" — but `/hyperbuild-revise` at IDEA scope may
+APPEND a dated `## Revisions` entry below them, quoting the user's request
+verbatim; that append is the propagation mechanism, because every spawn
+block-quotes the idea body. Both commands also record the steer in
+`runs/<run_tag>/decisions/revisions.md` (a shared ledger, appended to, one entry
+per invocation). Both mark the steps they invalidate as `"redo"` in the manifest,
+and both END by re-parking the run at the design gate with a fresh gate report —
+the ONE stop stays the ONE stop, and only `/hyperbuild-choose` ever releases
+Stage B.
+
+---
+
 ## Stage routing (tier-free, two-stage)
 
 There are NO tiers. Every run gets every step. The only branch in the whole
 pipeline is the stage split around the design gate:
 
-- **Stage A order:** 1 → (2 ∥ 3) → 3.5 → 4 → 4.5 → 5 → 6 → 7 → (8 ∥ 9) → 10 → 11 → 12 → **STOP**
+- **Stage A order:** 1 → (2 ∥ 3) → 3.5 → 4 → 4.5 → 5 → 6 → 7 → (8 ∥ 9) → 8.5 → 10 → 11 → 12 → **STOP**
 - **Stage B order:** (checkpoint) → 13 → 14 → 15 → 16 → done
 
 **Platform-override detour:** if the user passed a platform override to
@@ -112,10 +139,16 @@ Exactly two step pairs run CONCURRENTLY, because their members share no inputs:
 For a pair, you drive BOTH step skills' spawn waves in the same message block,
 track each step's manifest entry independently (`steps.2`/`steps.3`,
 `steps.8`/`steps.9`), and proceed only when BOTH steps' exit criteria are met:
-3.5 needs 2 AND 3 done; 10 needs 9 done (11 needs 8's gallery only at gate
-time). RESUME RULE: on recovery, an unfinished member of a pair re-runs ALONE —
-never re-run the finished member. NO OTHER steps may overlap, ever — recovery
-complexity is why the list stops at two.
+3.5 needs 2 AND 3 done; 8.5 needs 8 done; 10 needs 9 done (11 needs 8's gallery
+only at gate time). RESUME RULE: on recovery, an unfinished member of a pair
+re-runs ALONE — never re-run the finished member. NO OTHER steps may overlap,
+ever — recovery complexity is why the list stops at two.
+
+**Step 8.5 is NOT a third concurrent member.** It consumes step 8's output
+only, so it can never start before step 8's exit criteria pass; invoke it once
+BOTH members of the 8 ∥ 9 pair have returned, which is what the Stage A order
+`(8 ∥ 9) → 8.5 → 10` encodes. On recovery it re-runs ALONE whenever
+`steps["8"]` is `done` and `steps["8.5"]` is not.
 
 ---
 
@@ -165,8 +198,8 @@ unfinished manifest. Then:
    writes `runs/<run_tag>/idea.md`, resolves the platform into
    `runs/<run_tag>/decisions/platform.md`, writes `runs/<run_tag>/scaffold.md`,
    initializes `runs/<run_tag>/manifest.json`, and seeds the TodoWrite list
-   with every step (1 through 16, including 3.5 and 4.5, plus a checkpoint
-   todo). The
+   with every step (1 through 16, including the half-steps 3.5, 4.5 and 8.5,
+   plus a checkpoint todo) — **20 todos**. The
    todo list survives context compaction; it is durable memory of where you
    are in the chain.
 4. After step 1 returns, continue down the Stage A order, invoking each step
@@ -190,13 +223,17 @@ canonical shape (step 1 creates it; every step flips its own key):
 
 - `stage`: `"PLAN"` → `"BUILD"` (flipped by `hyperbuild-choose`) → `"DONE"`
   (flipped after step 16 passes).
-- `steps`: string keys `"1"`…`"16"` including `"3.5"` and `"4.5"`; values `"running"`,
-  `"done"`, `"redo"` (set only by a checkpoint platform override),
-  `"in-progress"`/`"looped"` (steps 15/16 transitional states), or
+- `steps`: string keys `"1"`…`"16"` including `"3.5"`, `"4.5"` and `"8.5"`; values `"running"`,
+  `"done"`, `"redo"` (set by a checkpoint platform override, or by
+  `/hyperbuild-revise` / `/hyperbuild-redesign` for the design steps they
+  invalidate), `"in-progress"`/`"looped"` (steps 15/16 transitional states), or
   `"blocked"` (a gate that exhausted its fix rounds). Absent key = not
   started. Recovery keys on "not `done`" — any other value means the step
   still owns the run.
-- `blocked_on`: `null`, `"design-choice"` (set by step 12's stop), or an
+- `blocked_on`: `null`, `"design-choice"` (set by step 12's stop), an
+  IN-FLIGHT marker set by a gate-time command skill —
+  `"revision-in-flight:R<N>"` (`/hyperbuild-revise`) or
+  `"redesign-in-flight:round-<N>"` (`/hyperbuild-redesign`) — or an
   honest failure marker set by a blocked gate or preflight (steps 12, 13,
   16 — e.g. `"design-gate"`, `"toolchain: ..."`, `"ship-gate: ..."`).
 
@@ -247,6 +284,17 @@ canonical shape (step 1 creates it; every step flips its own key):
    pass; step 15 commits after its patch pass. Rollback is `git revert`, the
    epic critics review real diffs, and the audit trail runs task → commit.
    The ship gate requires a clean working tree.
+10. **DESIGN CRAFT IS GATED.** `docs/DESIGN-CRAFT.md` is BINDING on steps 6, 7,
+    8, and 8.5. Every design spawn prompt cites it BY PATH in its CONTEXT FILES
+    list, and every `hb-design-researcher`, `hb-design-system-author`,
+    `hb-mockup-smith`, and `hb-design-critic` reads it before producing
+    anything. Its violations — the banned AI-design tells, a missing signature
+    element, one system font doing every job, clipped text, a FAB parked on a
+    list row — are DEFECTS, not taste disagreements: they get re-spawned or
+    patched like any other failed check. And **a rendered screen nobody looked
+    at is not a finished design.** Step 8.5 exists because the first real run
+    sent 30 unviewed screenshots straight to the human gate. Never let a
+    direction reach step 12 with a screenshot no critic has opened.
 
 ---
 
@@ -308,11 +356,15 @@ Tasks are in flight, so rule 1 does not bind). The message must contain:
 - The next command: `/hyperbuild-choose a|b|c` (with each design's name next
   to its letter), and the optional platform-override form
   `/hyperbuild-choose <a|b|c> <platform>`
+- The two change-of-mind commands, one line each: `/hyperbuild-revise <what to
+  change>` to change the idea, a feature, one direction's look, or the epic
+  split, and `/hyperbuild-redesign [notes]` for new design directions (with
+  KEEP/REPLACE, e.g. "keep c, replace a and b")
 
-**Do NOT invoke step 13. Do NOT invoke `hyperbuild-choose` yourself.** Only
-the user's `/hyperbuild-choose` invocation releases Stage B. If the user runs
-`/hyperbuild` again while `blocked_on: "design-choice"`, repeat the summary
-message — do not advance.
+**Do NOT invoke step 13. Do NOT invoke `hyperbuild-choose`, `hyperbuild-revise`,
+or `hyperbuild-redesign` yourself.** Only the user's `/hyperbuild-choose`
+invocation releases Stage B. If the user runs `/hyperbuild` again while
+`blocked_on: "design-choice"`, repeat the summary message — do not advance.
 
 ---
 
@@ -323,8 +375,22 @@ step you're on:
 
 0. **Read the manifest FIRST.** Glob `runs/*/manifest.json`; take the newest
    by `created`. Then:
+   - `blocked_on` starts with `"revision-in-flight:"` or
+     `"redesign-in-flight:"` → a gate-time command skill died mid-flight.
+     **Do NOT resume the step order.** Read its scope file —
+     `runs/<run_tag>/temp/revision-R<N>/scope.md` or
+     `runs/<run_tag>/temp/redesign-round-<N>/scope.md` — and re-enter the
+     OWNING skill: `Skill(skill: "hyperbuild-revise")` or
+     `Skill(skill: "hyperbuild-redesign")`, which resume from their own entry
+     guards. Resuming step 6 (or 4) unscoped instead would re-run it for all
+     three letters, renaming every direction and overwriting `directions.md` —
+     destroying a KEPT letter, whose artifacts are deliberately not archived.
    - `blocked_on: "design-choice"` → the run is parked at the design gate.
-     Repeat the stop message; end the turn.
+     Repeat the stop message (including the `/hyperbuild-revise` and
+     `/hyperbuild-redesign` lines); end the turn. EXCEPTION: if any design step
+     is marked `"redo"` — `/hyperbuild-revise` or `/hyperbuild-redesign` ran to
+     completion but a step is still owed — re-run those steps in ascending
+     order (6 → 7 → 8 → 8.5 → 12) and re-park.
    - `stage: "BUILD"` and `design_choice` set → continue at the first
      unfinished BUILD step (13 → 14 → 15 → 16) — but first re-run any of
      steps 5/10/11 marked `"redo"`, in that order.
@@ -349,6 +415,7 @@ step you're on:
    | 6 | `runs/<run_tag>/designs/directions.md` + one research doc per direction in `research/design/` |
    | 7 | `runs/<run_tag>/designs/{a,b,c}/design-system.md` + `runs/<run_tag>/designs/{a,b,c}/tokens.css` |
    | 8 | `runs/<run_tag>/designs/{a,b,c}/mockups/<screen>.html` + `runs/<run_tag>/designs/{a,b,c}/screenshots/<screen>.png` + `runs/<run_tag>/designs/index.html` |
+   | 8.5 | `runs/<run_tag>/gates/visual-qa-{a,b,c}.json` (one per direction, each carrying a final verdict) |
    | 9 | `research/skill-authoring-guide.md` |
    | 10 | `.claude/skills/{app-code-style,app-architecture,app-testing,app-components,app-review-checklist}/SKILL.md` |
    | 11 | `epics/00-overview.md` + `epics/NN-<slug>/epic.md` + `epics/NN-<slug>/task-NN-<slug>.md` |

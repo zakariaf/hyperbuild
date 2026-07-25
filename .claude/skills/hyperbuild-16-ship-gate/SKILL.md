@@ -237,7 +237,7 @@ Nine checks. ALL must pass. Every round runs ALL nine fresh — a fix for one ch
    - <from runs/<run_tag>/gates/review-loop-log.md ## Known gaps, plus PRD could/won't features not built>
    ```
 
-9. **Close out the run.** Manifest: `steps."16": "done"`, `stage: "DONE"`, `blocked_on: null`. Mark ALL 19 todos complete (the 18 step todos — including 3.5 and 4.5 — plus the checkpoint todo). Then deliver the final user message — the ONLY prose message this stage sends, and it follows this contract exactly:
+9. **Close out the run.** Manifest: `steps."16": "done"`, `stage: "DONE"`, `blocked_on: null`. Mark ALL 20 todos complete (the 19 step todos — including the half-steps 3.5, 4.5 and 8.5 — plus the checkpoint todo). Then deliver the final user message — the ONLY prose message this stage sends, and it follows this contract exactly:
    - **What was built:** one short paragraph — the app (quote the idea's core), the platform, N must + M should features implemented across K screens (counts from the PRD and coverage matrix).
    - **How to run it:** the exact commands, fenced — dependency install, run, test (from the stack-guide, e.g. `cd app && flutter pub get`, `flutter run`, `flutter test`).
    - **Test count:** "<N> tests, all green" (from the ship verdict evidence).

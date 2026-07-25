@@ -27,16 +27,23 @@ runs/<run_tag>/
 │   └── wave-log.md            # step 14's wave ledger: `wave <N>: [<task ids>]`, logged BEFORE each wave spawns
 ├── designs/
 │   ├── index.html             # gallery comparing all three designs (step 8) — OPEN THIS
-│   └── {a,b,c}/
-│       ├── design-system.md   # full system: principles, type scale, color, spacing, components
-│       ├── tokens.css         # CSS custom properties
-│       ├── mockups/<screen>.html      # one self-contained HTML per mockable (full/partial) screen
-│       └── screenshots/<screen>.png   # headless-Chrome render of every mockup (step 8) — the visual spec steps 14–15 compare against
+│   ├── {a,b,c}/
+│   │   ├── design-system.md   # full system: principles, type scale, color, spacing, components
+│   │   ├── tokens.css         # CSS custom properties
+│   │   ├── mockups/<screen>.html      # one self-contained HTML per mockable (full/partial) screen
+│   │   └── screenshots/<screen>.png   # headless-Chrome render of every mockup (step 8) — the visual spec steps 14–15 compare against
+│   └── archive/round-<N>/     # written by /hyperbuild-redesign: the directions a round replaced
+│       ├── round.md           # what was kept/replaced, the verbatim notes, why each was replaced
+│       ├── directions.md      # snapshot of the mapping as it stood before the round
+│       └── <letter>/          # that slot's design-system.md, tokens.css, mockups/, screenshots/,
+│                              #   research-<slug>.md, visual-qa-<letter>.json — INERT, read by nothing
 ├── decisions/
 │   ├── platform.md            # chosen stack + rationale (step 1)
-│   └── design-choice.md       # written by /hyperbuild-choose
+│   ├── design-choice.md       # written by /hyperbuild-choose
+│   └── revisions.md           # shared ledger, appended by /hyperbuild-revise + /hyperbuild-redesign
 └── gates/
     ├── design-gate-report.md  # step 12
+    ├── visual-qa-{a,b,c}.json # step 8.5 — one visual-QA record per direction (findings + verdicts)
     └── ship-report.md         # step 16
 ```
 
@@ -147,8 +154,14 @@ its format contract.
 
 - **NEVER hand-edit files under `runs/`.** The manifest is the resume point; a
   hand-edited manifest makes the router resume into a lie.
-- **idea.md is written once and never modified.** If the idea was wrong, that's a new
-  run (a fresh harness clone), not an edit.
+- **idea.md's frontmatter and verbatim idea body are written once and never modified.**
+  Not reworded, not reordered, not "reconciled" with anything that happened later — every
+  spawn prompt block-quotes that body, so an edit silently redirects the whole pipeline.
+  The ONE permitted exception is append-only and pipeline-driven: at the design gate,
+  `/hyperbuild-revise` at IDEA scope may APPEND a dated `## Revisions` section BELOW the
+  original body, quoting the user's request verbatim (that append is how the change
+  reaches every downstream subagent). Hand edits remain banned, and if the "revision" is
+  really a different app, that's a new run (a fresh harness clone), not an edit.
 - **`scaffold.md` and `temp/` never ship** and are never cited as evidence in gate
   reports.
 - **Only `/hyperbuild-choose` writes `decisions/design-choice.md`.** Editing it directly

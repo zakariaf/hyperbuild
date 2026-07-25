@@ -19,10 +19,11 @@ Three documents anchor everything:
 
 - **`hyperbuild` is a thin router.** It bootstraps, sequences, and recovers — it never
   does step work. Each step is its own skill (`hyperbuild-1-intake` …
-  `hyperbuild-16-ship-gate`, 18 step skills including 3.5 and 4.5), invoked via
-  `Skill()` and loaded fresh at the moment it runs. `hyperbuild-choose` is the human
-  checkpoint. 18 + router + choose = 20 skill directories.
-- **Agents are capability contracts.** The 19 subagents in `.claude/agents/hb-*.md`
+  `hyperbuild-16-ship-gate`, 19 step skills including the half-steps 3.5, 4.5 and 8.5),
+  invoked via `Skill()` and loaded fresh at the moment it runs. `hyperbuild-choose` is
+  the human checkpoint; `hyperbuild-revise` and `hyperbuild-redesign` are the two other
+  gate-time command skills. 19 + router + 3 command skills = 23 skill directories.
+- **Agents are capability contracts.** The 20 subagents in `.claude/agents/hb-*.md`
   carry tool lists that are the *enforcement mechanism*, not documentation: critics
   have no Edit/Write and physically cannot fix what they find; `hb-patcher` has no
   Write and physically cannot regenerate a file. Never "helpfully" widen an agent's
@@ -45,7 +46,7 @@ Three documents anchor everything:
 2. **An artifact path or name is enumerated in many places — change ALL of them or
    none.** The enumeration sites are: the step skill that writes it, the spawn
    templates that carry it as `output_path`, the consuming steps' input lists, the
-   gate checklists (step 12's 19-row table, step 16's checks), the router's recovery
+   gate checklists (step 12's 21-row table, step 16's checks), the router's recovery
    artifact table (`.claude/skills/hyperbuild/SKILL.md`, "Scan disk artifacts"),
    PIPELINE.md's per-step **Artifacts:** lines, and the README tables. A path renamed
    in four of seven places produces a pipeline that writes to the new name and gates

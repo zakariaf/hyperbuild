@@ -1,18 +1,19 @@
 # PIPELINE.md — hyperbuild architecture
 
-hyperbuild is a two-stage, 18-step Claude Code pipeline (steps 1–12 plus half-steps 3.5
-and 4.5 = Stage A PLAN; steps 13–16 = Stage B BUILD) with exactly ONE human checkpoint between the
+hyperbuild is a two-stage, 19-step Claude Code pipeline (steps 1–12 plus half-steps 3.5,
+4.5 and 8.5 = Stage A PLAN; steps 13–16 = Stage B BUILD) with exactly ONE human checkpoint between the
 stages. This document is the architecture reference: the principles, every step's
 contract, the state layout, both gates, the subagent spawn contract, and the lineage back
 to hyperresearch — the deep-research harness this design is copied from.
 
 The entry skill `hyperbuild` is a thin router; each step is its own skill under
-`.claude/skills/hyperbuild-N-<name>/` (18 step skills + the router + `hyperbuild-choose`
-= 20 skill directories); the 19 subagents live in `.claude/agents/hb-*.md`.
+`.claude/skills/hyperbuild-N-<name>/` (19 step skills + the router + the three gate-time
+command skills `hyperbuild-choose`, `hyperbuild-revise`, `hyperbuild-redesign`
+= 23 skill directories); the 20 subagents live in `.claude/agents/hb-*.md`.
 
 ---
 
-## The 9 architecture principles
+## The 10 architecture principles
 
 1. **Router + step skills.** The entry skill `hyperbuild` is a thin ROUTER: bootstrap,
    sequence, recover. It never does step work. Each pipeline step is its own skill,
@@ -67,6 +68,17 @@ The entry skill `hyperbuild` is a thin router; each step is its own skill under
    pass. Rollback is `git revert`, the epic critics review real diffs, and the audit
    trail runs task → commit. The ship gate requires a clean working tree.
 
+10. **Design craft is gated.** `docs/DESIGN-CRAFT.md` is BINDING on the design steps —
+    6 (design research), 7 (design systems), 8 (mockups), 8.5 (visual QA). Every design
+    spawn prompt cites it by path; every `hb-design-researcher`,
+    `hb-design-system-author`, `hb-mockup-smith`, and `hb-design-critic` reads it before
+    producing anything. Violations are DEFECTS, not taste disagreements: a banned
+    AI-design tell, a missing signature element, one system font doing every job, clipped
+    text, a FAB parked on a list row — each is re-spawned or patched like any other
+    failed check. The load-bearing half of the principle is the second one: **a rendered
+    screen nobody looked at is not a finished design.** Craft rules that no step ever
+    checks against pixels are decoration, which is why step 8.5 exists.
+
 ---
 
 ## Stage A — PLAN (`/hyperbuild <idea>`)
@@ -77,8 +89,8 @@ Persists the verbatim idea, mints the run identity, resolves the platform, and s
 run state. Run tag = idea slug + 6 random hex chars (e.g. `habit-coach-3f9a2c`).
 Platform resolution: stated in the idea wins; otherwise inferred, with the rationale
 recorded. Gear resolution: `premier` in the idea prompt opts in; default `standard`.
-Seeds TodoWrite with every step (1–16, including 3.5 and 4.5) plus the checkpoint todo —
-19 todos. Spawns: none.
+Seeds TodoWrite with every step (1–16, including the half-steps 3.5, 4.5 and 8.5) plus
+the checkpoint todo — 20 todos. Spawns: none.
 
 **Artifacts:** `runs/<run_tag>/idea.md` (gospel), `runs/<run_tag>/manifest.json`,
 `runs/<run_tag>/scaffold.md` (orchestrator's private planning doc, never ships),
@@ -172,6 +184,9 @@ systems, typography, color theory, motion, component patterns, accessibility —
 HARVEST-FIRST (public design-system repos and open token sets cloned into
 `research/harvest/`, then gap-fill). Spawns 3 `hb-design-researcher` in parallel (one
 per direction); 6–10 sources per direction at `standard`, 12–18 at `premier`.
+BINDING: `docs/DESIGN-CRAFT.md` — cited by path in every spawn prompt, read before any
+research is written. The three directions must be three different products, not three
+palettes on one layout (principle 10).
 
 **Artifacts:** `research/design/<direction-slug>.md` (one per direction).
 
@@ -180,6 +195,11 @@ per direction); 6–10 sources per direction at `standard`, 12–18 at `premier`
 Builds the 3 full design systems from their research docs: type scale, color palette
 (light + dark), spacing, radii, elevation, and component specs (buttons, cards, inputs,
 nav, lists, empty states). Spawns 3 `hb-design-system-author` in parallel.
+BINDING: `docs/DESIGN-CRAFT.md` — every system must commit, in real sections with real
+values, to the eight craft commitments (signature element, display+body type pairing with
+a stated scale, ONE named depth model, a radius rhythm plus a distinctive shape move,
+hue-biased neutrals with separate status tokens, CSS-drawn empty-state art, data
+personality, motion notes). Hand-wavy commitments become step 8.5 defects.
 
 **Artifacts:** `runs/<run_tag>/designs/{a,b,c}/design-system.md`,
 `runs/<run_tag>/designs/{a,b,c}/tokens.css` (CSS custom properties).
@@ -200,10 +220,65 @@ manifest and continues — missing screenshots become a design-gate warning, not
 fail. Plus the gallery: side-by-side iframes per screen, design names, jump nav. Spawns 3–6
 `hb-mockup-smith` (screens split per design). Screen count: every mockable PRD screen,
 cap 12 at `standard`, cap 20 at `premier`. Flips feature `status: specced → designed`.
+BINDING: `docs/DESIGN-CRAFT.md` — its §4 layout-integrity rules and its §5 self-check are
+the smith's definition of done, and its §2 banned tells are checked by name before a
+mockup is reported complete.
 
 **Artifacts:** `runs/<run_tag>/designs/{a,b,c}/mockups/<screen>.html`,
 `runs/<run_tag>/designs/{a,b,c}/screenshots/<screen>.png`,
 `runs/<run_tag>/designs/index.html`.
+
+### Step 8.5 — Visual QA (`hyperbuild-8-5-visual-qa`)
+
+The design pipeline's adversarial pass — the only step in the harness that LOOKS at what
+was drawn. Runs after step 8's exit criteria pass (it consumes step 8's renders and
+nothing else, so it is invoked once both members of the 8 ∥ 9 pair have returned; it is
+never a third concurrent member). Spawns 3 `hb-design-critic` in parallel, one per
+direction, each with Read access to that direction's `screenshots/*.png`, its
+`mockups/*.html`, its `design-system.md`, and `docs/DESIGN-CRAFT.md`. Each critic OPENS
+every screenshot and judges three things:
+
+1. **Craft** (DESIGN-CRAFT §2, §3) — does the direction trip any of the 12 banned
+   AI-design tells; is the signature element present on ≥3 screens; do display and body
+   resolve to different families; is the declared depth model actually applied; are there
+   ≥3 distinct radii and the named shape move; are neutrals hue-biased and the accent
+   scarce; do empty states carry real CSS-drawn art; do ≥2 data-personality forms appear.
+2. **Layout integrity** (DESIGN-CRAFT §4) — the mechanical, checkable facts, every one of
+   them a bug the first real run shipped: nothing clipped at any edge; no FAB or sheet
+   covering a list row, a nav label, or a CTA; truncation deliberate (clamped lines or a
+   real ellipsis — never a half-word like `12d lef`); no horizontal page scroll; tap
+   targets ≥44×44; body text ≥15px at ≥4.5:1; spacing from the scale; real PRD content
+   everywhere; status-bar and home-indicator safe areas drawn; dark mode holds.
+   Cross-screen consistency within a direction counts here too: ONE nav component, one
+   destination set, one icon set, one status-bar treatment — and no app tab bar on
+   onboarding, modal, or full-screen-camera routes.
+3. **Conformance and distinctness** — every binding rule the direction's own
+   `design-system.md` states (nav destinations, FAB placement, list sort order, component
+   anatomy) verified against the renders; then the cross-direction test judged on PIXELS:
+   name three STRUCTURAL differences between a, b, and c without referring to color. If
+   only the palette differs, the three directions are one layout in three skins and the
+   check fails.
+
+Findings land as `runs/<run_tag>/gates/visual-qa-{a,b,c}.json` — per-screen, per-rule,
+each with the screenshot path and the named rule it violates. Critics NEVER edit
+(principle 6). Every defect re-spawns the `hb-mockup-smith` that drew the offending
+screen with the screenshot path and the defect named verbatim; the orchestrator
+re-renders and re-critiques. MAX 2 critic rounds = exactly ONE patch round (deliberately
+stricter than the ≤3 gate-fix-round budget: what survives here is written down, not looped
+on), then unresolved defects are carried into the
+step 12 report as explicit warnings so the human sees them at the gate instead of
+discovering them in the pixels.
+
+**Why this step exists:** the first real hyperbuild run produced three competent design
+SYSTEMS and 30 rendered screens that nobody ever opened. The systems specified empty-state
+illustrations, motion, dark palettes, and a load-bearing shape channel; the screens showed
+flat cards, clipped rows, and a floating action button parked on top of a list — including,
+on three separate screens, on top of the primary CTA. Every one of those defects was
+visible in a PNG the pipeline had already rendered. The gap was not judgment, it was that
+no step in the pipeline had eyes.
+
+**Artifacts:** `runs/<run_tag>/gates/visual-qa-{a,b,c}.json`; re-rendered
+`screenshots/<screen>.png` and patched `mockups/<screen>.html` for every fixed defect.
 
 ### Step 9 — Skill research (`hyperbuild-9-skill-research`)
 
@@ -214,8 +289,8 @@ exemplar, plus `anthropics/skills` and vetted community collections into
 `research/harvest/skills/`) and mining this harness itself as an exemplar. The guide
 ends with binding rules plus a shortlist of harvested skills step 10 can adapt (with
 licenses). Spawns 1–2 `hb-stack-researcher`. Steps 8 and 9 share no inputs and run as
-a concurrent pair (8 ∥ 9 — the other permitted exception to sequential steps); step 10
-needs only 9, and 11 needs 8's gallery only at gate time.
+a concurrent pair (8 ∥ 9 — the other permitted exception to sequential steps); step 8.5
+needs only 8, step 10 needs only 9, and 11 needs 8's gallery only at gate time.
 
 **Artifacts:** `research/skill-authoring-guide.md`.
 
@@ -260,7 +335,10 @@ screens only); missing `screenshots/<screen>.png` renders (e.g. headless Chrome
 unavailable) surface as warnings in the report, never hard failures. The final
 message to the user summarizes the run (competitor count, top pain points, platform
 decision, epic/task counts), says how to open `runs/<run_tag>/designs/index.html`, and
-asks for `/hyperbuild-choose a|b|c`. Manifest: `blocked_on: "design-choice"`.
+asks for `/hyperbuild-choose a|b|c` — plus one line each for `/hyperbuild-revise` and
+`/hyperbuild-redesign`, so "none of these yet" is an answer the user can give at the stop.
+Unresolved step 8.5 defects appear in the report as named warnings, never omissions.
+Manifest: `blocked_on: "design-choice"`.
 
 **Artifacts:** `runs/<run_tag>/gates/design-gate-report.md`.
 
@@ -280,6 +358,37 @@ A thin skill, not a step. It:
    platform-shaped; the research vault and designs survive).
 6. Invokes `Skill(skill: "hyperbuild")` — the router's resume logic takes over and
    drives Stage B.
+
+### Reworking the designs at the same stop
+
+Two sibling command skills share the checkpoint's preconditions (`stage: "PLAN"`,
+`steps["12"] == "done"`, `blocked_on: "design-choice"`) and refuse in every other state:
+
+- **`/hyperbuild-revise <plain-English change>`** — takes the request as free text and
+  CLASSIFIES it into one of four scopes, then applies only that scope's blast radius:
+  **idea** (a dated `## Revisions` entry appended to `idea.md`, then the PRD, feature
+  specs, and everything downstream that depends on them) · **feature** (surgical edits to
+  `features/NN-*.md` + `00-index.md` + the PRD rows that state the same fact, then the
+  affected epics) · **design** (a tweak to ONE direction that stays itself — step 7 for
+  that letter, its smiths, its screenshots, step 8.5 scoped to it; the other two are
+  untouched, so the user's mental comparison survives) · **epics** (step 11 re-run under
+  a stated constraint). A request for new or replacement DIRECTIONS is handed off to
+  `/hyperbuild-redesign`.
+- **`/hyperbuild-redesign [notes]`** — regenerates the design directions from free-form
+  notes, parsing KEEP/REPLACE (`keep c, replace a and b`): every slot by default, or only
+  the letters not kept. Kept letters survive untouched; replaced slots are archived under
+  `designs/archive/round-<N>/`, then 6 → 7 → 8 → 8.5 → 12 re-run for the new letters
+  only. Research, feature specs, epics, and generated skills all survive; only `designs/`
+  is rebuilt.
+
+Both mark the steps they invalidate `"redo"` in the manifest, record the steer in the
+shared ledger `runs/<run_tag>/decisions/revisions.md` (appended, one entry per
+invocation), and both END by re-parking the run at the design gate with a fresh report.
+`idea.md`'s frontmatter and verbatim body stay gospel (principle 2) — never reworded,
+never reordered; `/hyperbuild-revise` at IDEA scope may only APPEND a dated
+`## Revisions` section below them, which is precisely how the change propagates (every
+spawn block-quotes the idea body). The ONE-stop rule is preserved exactly: taste iterates
+at the stop that already exists, and only `/hyperbuild-choose` releases Stage B.
 
 ---
 
@@ -427,9 +536,11 @@ runs/<run_tag>/
 │       └── screenshots/<screen>.png   # headless-Chrome renders (step 8)
 ├── decisions/
 │   ├── platform.md            # chosen stack + rationale (step 1)
-│   └── design-choice.md       # written by /hyperbuild-choose
+│   ├── design-choice.md       # written by /hyperbuild-choose
+│   └── revisions.md    # appended by /hyperbuild-revise + /hyperbuild-redesign
 └── gates/
     ├── design-gate-report.md  # step 12
+    ├── visual-qa-{a,b,c}.json # step 8.5 — per-direction visual QA findings
     └── ship-report.md         # step 16
 ```
 
@@ -535,12 +646,32 @@ charitably.
 - [ ] One non-empty `screenshots/<screen>.png` per mockup in each design — when the
       manifest has `screenshots_skipped: true`, missing screenshots are a WARNING
       (`warn`), never a hard fail
+- [ ] `runs/<run_tag>/gates/visual-qa-{a,b,c}.json` exists — one per direction, each
+      accounting for EVERY rendered screenshot: a `.png` named in neither
+      `screens_reviewed` nor `screens_not_viewed` FAILS (a rendered screen nobody looked
+      at is not a finished design, principle 10). A screen listed in
+      `screens_not_viewed` WITH a reason is a `warn` and is named in the report, not a
+      hard fail — step 8.5 is required to say "I could not open this" rather than judge
+      it from HTML. With `screenshots_skipped: true` there are no pixels to view: the
+      files must still exist, recording the source-level review step 8.5 fell back to,
+      and the report carries the degraded-QA warning
+- [ ] ZERO step 8.5 `critical` findings are still `open`: each is either fixed (the
+      re-rendered screenshot passes) or `accepted-known-issue` after both critic rounds
+      were spent, with a reason — and every accepted one is printed in this report's
+      `### Known visual issues` table AND in the user-facing stop message. Unresolved
+      `major`/`minor` findings stay recorded in the visual-QA JSONs; the gate does not
+      block on them
+- [ ] The cross-direction distinctness check ran on PIXELS (step 8.5's own 8.5.8 pass,
+      recorded in `temp/orchestrator-notes.md`). It is enforced INSIDE step 8.5: three
+      structural, non-color differences named, or a DESIGN-CRAFT §2.12 finding filed
+      against every direction that reads as a palette swap. The gate reads the resulting
+      findings, not a separate verdict
 - [ ] `runs/<run_tag>/designs/index.html` exists and references all three designs
 - [ ] `epics/00-overview.md` exists; every epic dir has `epic.md` + ≥1 task file; every
       task has valid frontmatter with `status: todo`
 - [ ] Coverage complete BOTH directions: every must/should feature id appears in ≥1
       task's `features:` list, and every task's cited features exist
-- [ ] Manifest: steps 1–11 (incl. 3.5 and 4.5) all `done`
+- [ ] Manifest: steps 1–11 (incl. 3.5, 4.5 and 8.5) all `done`
 
 On pass: write the report, set `blocked_on: "design-choice"`, STOP, and message the user
 (summary + gallery path + `/hyperbuild-choose a|b|c`). This is the ONE permitted stop.
@@ -616,7 +747,8 @@ is a deliberate port of a mechanism that hyperresearch proved under fire.
 | `temp/orchestrator-notes.md` anti-idle protocol | "CRITICAL: never emit bare text while waiting" + orchestrator-notes | Headless-mode survival: a text-only response ends the turn; writing evolving thoughts to disk keeps the turn alive and is productive. |
 | Adversarial searches required in every research artifact ("X criticism", "why I stopped using X") | Step 2's mandatory adversarial search pass | A corpus of praise produces a naive plan; hostile sources are fetched on purpose. |
 | Step 3.5 research audit — `hb-research-critic` refutes the corpus, clusters syndicated copies | hyperresearch's corpus critic / source-independence audit | Research is attacked BEFORE it is consumed: derivative copies count as ONE source, and every headline claim survives a refutation attempt or gets downgraded — never silently deleted. |
+| Step 8.5 visual QA — `hb-design-critic` opens every rendered screenshot and grades it against `docs/DESIGN-CRAFT.md`, defects re-spawn the smith that drew the screen | The same adversarial-critic mechanism, pointed at PIXELS instead of prose | hyperresearch attacks the artifact it is about to ship in the medium the reader will consume it in. Design's medium is the render, so the critic must LOOK: a craft rule checked only against the design system's own prose is self-certification (the first run's directions self-scored "three different products" while rendering one layout in three palettes). Findings JSON, no edits, ≤3 fix rounds — a design gate with the same mechanics as every other gate. |
 | Step 14 wave loop — disjoint-`files:` tasks from any epic run in parallel between sync points | Parallel-within-a-step discipline (all Task calls in ONE message, non-overlapping assignments) | Parallelism lives inside one unit of work with disjoint assignments and a hard gate at its edge; the wave is step 14's unit, the full-suite sync point its gate. |
 | Per-wave/per-epic git commits in `app/` (`wave <N>: <task ids> — ...`) + clean-tree ship gate | Pre-stubbed `patch-log.json` provenance ledger | Every change is attributable after the fact: task → commit is the audit trail, epic critics review real diffs, and rollback is `git revert`, not archaeology. |
 | Small, categorized parts: the stack-guide's code taxonomy (step 5), one-kind small tasks (step 11), each piece's tests green BEFORE composition (step 14) | Atomic work items + the patcher's small surgical Edit hunks (per-hunk cap) | Small pieces are easier to test, review, and implement with focus; screens compose from already-tested subcomponents instead of being built in one shot. |
-| ONE human stop — the design gate | (deliberate divergence) hyperresearch has zero mid-run checkpoints | Taste is the one thing the pipeline shouldn't decide. hyperbuild stops exactly once, for exactly one question — a|b|c — and nowhere else. |
+| ONE human stop — the design gate | (deliberate divergence) hyperresearch has zero mid-run checkpoints | Taste is the one thing the pipeline shouldn't decide. hyperbuild stops exactly once, for exactly one question — a\|b\|c — and nowhere else. `/hyperbuild-revise` and `/hyperbuild-redesign` iterate the designs AT that stop and re-park there; they never open a second one. |

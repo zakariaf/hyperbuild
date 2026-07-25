@@ -201,5 +201,11 @@ Intermediate (kept, not shipped): `runs/<run_tag>/temp/skill-research-format.md`
   Sources section)
 
 Then update the manifest: `steps.9 = done`, mark the step-9 todo complete, and return to
-the router, which — once step 8 (your concurrent pair member) is also done — invokes
-`Skill(skill: "hyperbuild-10-skill-forge")`.
+the router.
+
+**Do NOT route to step 10 yourself.** Step 8.5 (`hyperbuild-8-5-visual-qa`) runs on step
+8's output — the visual QA of every rendered screen — and you are normally the LAST member
+of the 8 ∥ 9 pair to finish, so the temptation to jump straight to step 10 is exactly the
+bug that skips visual QA. The router invokes `Skill(skill: "hyperbuild-10-skill-forge")`
+only once BOTH step 8.5 and step 9 are done; if `steps["8"] == "done"` but
+`steps["8.5"] != "done"`, the next call is `Skill(skill: "hyperbuild-8-5-visual-qa")`.

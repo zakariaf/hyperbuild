@@ -6,10 +6,20 @@ codebase — the app the pipeline builds lands in `app/`.
 
 ## Entry points
 
-- `/hyperbuild <app idea>` — runs Stage A (PLAN, steps 1–12 incl. half-steps 3.5 and
-  4.5), then stops at the design gate.
+- `/hyperbuild <app idea>` — runs Stage A (PLAN, steps 1–12 incl. half-steps 3.5, 4.5 and
+  8.5), then stops at the design gate.
 - `/hyperbuild-choose <a|b|c>` — the ONE human checkpoint. Records the design choice and
   drives Stage B (BUILD, steps 13–16) to a working app.
+- `/hyperbuild-revise <plain-English change>` — at the design gate only: classifies the
+  request into one of four scopes (idea | feature | design | epics) and re-runs only what
+  depends on it — e.g. design scope is 7 → 8 → 8.5 → 12 for one letter — then re-parks at
+  the gate. The verbatim idea body stays immutable; an idea-scope revision APPENDS a dated
+  `## Revisions` entry below it.
+- `/hyperbuild-redesign [notes]` — at the design gate only: regenerates the design
+  directions from free-form notes — every slot by default, or only the letters not named
+  in a KEEP instruction ("keep c, replace a and b"). Replaced slots are archived under
+  `designs/archive/round-<N>/`; 6 → 7 → 8 → 8.5 → 12 re-run for the new letters, then it
+  re-parks at the gate.
 
 ## Resume rule
 
@@ -34,7 +44,9 @@ Harness source — editable: `.claude/skills/hyperbuild*`, `.claude/agents/hb-*.
 ## Map
 
 - `README.md` — positioning, quickstart, pipeline + agent tables, scale gears.
-- `PIPELINE.md` — architecture: the 9 principles, per-step contracts, gates, spawn
+- `PIPELINE.md` — architecture: the 10 principles, per-step contracts, gates, spawn
   contract, hyperresearch lineage.
+- `docs/DESIGN-CRAFT.md` — the BINDING visual craft bar for steps 6, 7, 8, 8.5. Every
+  design spawn prompt cites it by path; its violations are defects, not opinions.
 - `runs/README.md`, `research/README.md`, `features/README.md`, `epics/README.md` —
   format contracts for each pipeline-owned directory.

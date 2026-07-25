@@ -7,14 +7,14 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/zakariaf/hyperbuild" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-pipeline-6E56CF" alt="Claude Code pipeline">
-  <img src="https://img.shields.io/badge/skills-20-45C4FF" alt="20 skills">
-  <img src="https://img.shields.io/badge/agents-19-FFB224" alt="19 agents">
+  <img src="https://img.shields.io/badge/skills-23-45C4FF" alt="23 skills">
+  <img src="https://img.shields.io/badge/agents-20-FFB224" alt="20 agents">
   <a href="https://github.com/zakariaf/hyperbuild/generate"><img src="https://img.shields.io/badge/use%20this-template-2ea44f" alt="Use this template"></a>
 </p>
 
 ---
 
-**hyperbuild turns Claude Code into an app factory.** It is an 18-step, two-stage pipeline harness: a thin router skill drives per-step skills, tool-locked subagents do the work in parallel, every artifact lands on disk, and crashed runs resume at the exact step where they died.
+**hyperbuild turns Claude Code into an app factory.** It is a 19-step, two-stage pipeline harness: a thin router skill drives per-step skills, tool-locked subagents do the work in parallel, every artifact lands on disk, and crashed runs resume at the exact step where they died.
 
 ```
 /hyperbuild a habit tracker that coaches you with weekly insights, mobile-first
@@ -94,7 +94,7 @@ The entry skill `hyperbuild` is a thin ROUTER: it bootstraps the run, then invok
 Steps run strictly in sequence, with exactly two concurrent pairs — **2 ∥ 3** and **8 ∥ 9** — whose members share no inputs:
 
 ```
-Stage A:  1 → (2 ∥ 3) → 3.5 → 4 → 4.5 → 5 → 6 → 7 → (8 ∥ 9) → 10 → 11 → 12 → STOP
+Stage A:  1 → (2 ∥ 3) → 3.5 → 4 → 4.5 → 5 → 6 → 7 → (8 ∥ 9) → 8.5 → 10 → 11 → 12 → STOP
 Stage B:  (checkpoint) → 13 → 14 → 15 → 16 → done
 ```
 
@@ -112,6 +112,7 @@ Stage B:  (checkpoint) → 13 → 14 → 15 → 16 → done
 | 6 | Design research | Propose exactly 3 named design directions; deep research each | 3 hb-design-researcher (one per direction) |
 | 7 | Design systems | 3 full design systems: `design-system.md` + `tokens.css` each — type, color (light+dark), spacing, components | 3 hb-design-system-author (one per direction) |
 | 8 | Mockups *(∥ 9)* | Every mockable PRD screen × 3 designs as self-contained HTML with REAL content + headless-Chrome `screenshots/` renders + `designs/index.html` gallery | 3–6 hb-mockup-smith (screens split per design) |
+| 8.5 | Visual QA | The pixels get reviewed before you do: one critic per direction OPENS every rendered screenshot and judges it against the binding craft bar in [docs/DESIGN-CRAFT.md](docs/DESIGN-CRAFT.md) + that direction's own design system — craft (signature element, type pairing, depth, shape language, data personality, empty-state art), layout integrity (nothing clipped, no FAB parked on a list row, deliberate truncation, 44px tap targets, contrast, safe areas), and whether the three directions actually look like three products. Defects re-spawn the smith that drew the screen, re-render, re-judge (≤2 critic rounds = one patch round) → `gates/visual-qa-{a,b,c}.json` | 3 hb-design-critic (one per direction) |
 | 9 | Skill research *(∥ 8)* | How to author great Claude Code skills → `skill-authoring-guide.md` (mines hyperresearch as the exemplar) | 1–2 hb-stack-researcher |
 | 10 | Skill forge | Generate PROJECT-SPECIFIC skills into `.claude/skills/`: `app-code-style`, `app-architecture`, `app-testing`, `app-components`, `app-review-checklist` | 5 hb-skill-smith (one per skill) |
 | 11 | Epics | The full backlog: `epics/00-overview.md` + one dir per epic with `epic.md` + task files; every must/should feature → ≥1 task | 1 hb-epic-planner, then 3–6 hb-task-author, then hb-spec-critic coverage audit |
@@ -120,6 +121,25 @@ Stage B:  (checkpoint) → 13 → 14 → 15 → 16 → done
 ### Checkpoint — `/hyperbuild-choose <a|b|c>`
 
 Records your choice in `decisions/design-choice.md`, copies the chosen `tokens.css` + `design-system.md` to `app/design/`, flips the manifest to `stage=BUILD`, and re-invokes the router. An optional second argument overrides the platform (which re-runs steps 5, 10, 11 before building).
+
+### Changing your mind at the gate
+
+You are not stuck with a/b/c as drawn. While the run is parked at the design gate — and only there — two commands change things and park the run right back at the gate:
+
+```
+/hyperbuild-revise design b's cards feel formal — give it a real display face
+        # … design scope: re-works direction b only — its design system, its mockups,
+        #   its screenshots, its visual QA — then re-parks at the gate
+/hyperbuild-revise drop the barcode scanner, add manual entry shortcuts
+        # … feature scope: edits features/ + the PRD rows, re-runs the affected epics
+/hyperbuild-redesign keep c, replace a and b — go bolder, this is for chefs not accountants
+        # … archives a and b, regenerates just those two slots under your notes
+        #   (6 → 7 → 8 → 8.5); c survives untouched. With no KEEP, all three regenerate.
+```
+
+`/hyperbuild-revise` takes plain English and works out the scope itself — **idea**, **feature**, **design**, or **epics** — then re-runs only what genuinely depends on the change. `/hyperbuild-redesign` takes free-form notes plus optional KEEP/REPLACE instructions; replaced directions are archived under `designs/archive/round-<N>/`, never deleted.
+
+Your idea stays gospel: the verbatim body of `idea.md` is never rewritten — an idea-scope revision appends a dated `## Revisions` entry below it, and every steer is logged in `decisions/revisions.md`. Both commands end by re-parking the run at the design gate with a fresh gate report, so the pipeline still stops exactly once. Only `/hyperbuild-choose` releases Stage B. Run either command anywhere else in the pipeline and it refuses and tells you why.
 
 ### Stage B — BUILD (autonomous)
 
@@ -132,7 +152,7 @@ Records your choice in `decisions/design-choice.md`, copies the chosen `tokens.c
 
 ## Agent roster
 
-19 subagents in `.claude/agents/`. Tools are the enforcement mechanism, not documentation: critics physically cannot edit, the patcher physically cannot create files.
+20 subagents in `.claude/agents/`. Tools are the enforcement mechanism, not documentation: critics physically cannot edit, the patcher physically cannot create files.
 
 | Agent | Model | Tools | Role |
 |-------|-------|-------|------|
@@ -145,6 +165,7 @@ Records your choice in `decisions/design-choice.md`, copies the chosen `tokens.c
 | `hb-design-researcher` | sonnet | WebSearch, WebFetch, Read, Write, Bash | Deep research ONE design direction: reference systems, type, color, motion; harvest-first |
 | `hb-design-system-author` | opus | Read, Write | Author ONE complete design system (design-system.md + tokens.css) |
 | `hb-mockup-smith` | sonnet | Read, Write | Self-contained HTML mockups for assigned screens in ONE design |
+| `hb-design-critic` | opus | Read, Grep, Glob, Write | VIEWS every rendered screenshot of ONE direction and judges craft + layout integrity against `docs/DESIGN-CRAFT.md` and the direction's design system; findings JSON; NEVER edits |
 | `hb-skill-smith` | opus | Read, Write, WebSearch, WebFetch, Bash | Write ONE generated Claude Code skill (four-part anatomy) per the skill-authoring-guide |
 | `hb-epic-planner` | opus | Read, Write | PRD → epic breakdown w/ dependency order + coverage matrix |
 | `hb-task-author` | sonnet | Read, Write | Full task files for ONE epic (spec, files, testing, DoD) |
@@ -163,14 +184,17 @@ hyperbuild/                          # the harness (this repo)
 ├── README.md                         # you are here
 ├── CLAUDE.md                         # project memory for Claude Code
 ├── PIPELINE.md                       # deep architecture doc
+├── docs/DESIGN-CRAFT.md              # the BINDING visual craft bar (steps 6, 7, 8, 8.5)
 ├── LICENSE                           # MIT
 ├── .claude/
 │   ├── skills/
 │   │   ├── hyperbuild/               # ROUTER (entry)
 │   │   ├── hyperbuild-choose/        # the human checkpoint
-│   │   ├── hyperbuild-1-intake/ … hyperbuild-16-ship-gate/   # 18 step skills (incl. 3.5, 4.5)
+│   │   ├── hyperbuild-revise/        # gate-time: idea / feature / design / epics change
+│   │   ├── hyperbuild-redesign/      # gate-time: new directions (KEEP the ones you like)
+│   │   ├── hyperbuild-1-intake/ … hyperbuild-16-ship-gate/   # 19 step skills (incl. 3.5, 4.5, 8.5)
 │   │   └── app-*/                    # PROJECT-SPECIFIC skills, generated by step 10
-│   └── agents/hb-*.md                # the 19 subagents above
+│   └── agents/hb-*.md                # the 20 subagents above
 ├── skills -> .claude/skills          # symlinks for plugin packaging (Mode B)
 ├── agents -> .claude/agents
 ├── runs/<run_tag>/                   # run state (see runs/README.md)
@@ -178,8 +202,8 @@ hyperbuild/                          # the harness (this repo)
 │   ├── manifest.json                 # step transitions; resume point
 │   ├── designs/{a,b,c}/              # design systems + HTML mockups + screenshots/ renders
 │   ├── designs/index.html            # the comparison gallery you open
-│   ├── decisions/                    # platform.md, design-choice.md
-│   └── gates/                        # design-gate-report.md, ship-report.md
+│   ├── decisions/                    # platform.md, design-choice.md, revisions.md
+│   └── gates/                        # design-gate-report.md, visual-qa-{a,b,c}.json, ship-report.md
 ├── research/                         # the vault: steps 2–9 (see research/README.md)
 ├── features/                         # one spec per feature: step 4.5 (see features/README.md)
 ├── epics/                            # the backlog: step 11 (see epics/README.md)
@@ -210,14 +234,14 @@ Default gear: `standard`. Say "premier" in your idea prompt to opt in; step 1 re
 
 - [Claude Code](https://claude.com/claude-code)
 - The SDK for whatever platform your app targets — Flutter, Xcode, Node, whatever step 1 resolves (checked at step 13, not before)
-- Chrome (optional) — step 8 renders mockup screenshots via headless Chrome; without a Chrome binary the design gate warns instead of failing and you review the HTML mockups directly
+- Chrome (strongly recommended) — step 8 renders mockup screenshots via headless Chrome and step 8.5's critics judge those renders. Without a Chrome binary there are no pixels to review: step 8.5 degrades to a source-level read of the mockup HTML and the design gate warns instead of failing, so you review the HTML mockups yourself
 
 ## What it doesn't do
 
 - **It doesn't install your toolchain.** Stage B runs real platform commands (`flutter create`, Xcode builds, `npm` scaffolds). The SDK for your chosen platform must already be installed and on PATH, or step 13 blocks.
 - **Research quality depends on web access.** Steps 2–9 live on WebSearch/WebFetch. Rate limits, blocked sites, and thin niches degrade the evidence base; the artifacts cite what they actually found, but they can't cite what they couldn't reach.
 - **You still review the code.** The ship gate proves the tests pass, the lint is clean, every task is done, and the app builds. It does not prove the app is secure, performant at scale, or right for your market. Read `gates/ship-report.md` — including its "known gaps" section — before you ship anything to a user.
-- **It stops exactly once, on purpose.** You get three designs, not a design iteration loop. If none of a/b/c fits, that's a new run with a sharper idea prompt, not a negotiation with step 12.
+- **It stops exactly once, on purpose.** One checkpoint, one question: a, b, or c. If none of the three fits, `/hyperbuild-revise` and `/hyperbuild-redesign` rebuild the designs *at that same stop* (see [Changing your mind](#changing-your-mind-at-the-gate)) — the pipeline never opens a second checkpoint somewhere else, and it never asks you to arbitrate an architecture decision.
 - **One checkout, one app.** The vault, features, epics, and `app/` are singletons at the repo root. Don't point two ideas at one checkout.
 
 ## License

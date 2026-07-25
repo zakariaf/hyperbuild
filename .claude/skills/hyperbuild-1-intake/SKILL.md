@@ -159,7 +159,7 @@ You are executing step 1 (intake) of the hyperbuild pipeline. Nothing has run be
    - ...
    ```
 
-10. **Seed TodoWrite** — one todo per pipeline step (1 through 16, including 3.5 and 4.5) plus the checkpoint todo; 19 todos total, in order:
+10. **Seed TodoWrite** — one todo per pipeline step (1 through 16, including the half-steps 3.5, 4.5 and 8.5) plus the checkpoint todo; 20 todos total, in order:
 
     1. Step 1 — intake (mark in_progress NOW)
     2. Step 2 — market recon
@@ -171,15 +171,16 @@ You are executing step 1 (intake) of the hyperbuild pipeline. Nothing has run be
     8. Step 6 — design research
     9. Step 7 — design systems
     10. Step 8 — mockups
-    11. Step 9 — skill research
-    12. Step 10 — skill forge
-    13. Step 11 — epics & tasks
-    14. Step 12 — design gate (STOP: wait for /hyperbuild-choose)
-    15. Checkpoint — /hyperbuild-choose records the design choice (completed by the hyperbuild-choose skill, never by a step)
-    16. Step 13 — scaffold app
-    17. Step 14 — implement epics
-    18. Step 15 — adversarial review
-    19. Step 16 — ship gate
+    11. Step 8.5 — visual QA
+    12. Step 9 — skill research
+    13. Step 10 — skill forge
+    14. Step 11 — epics & tasks
+    15. Step 12 — design gate (STOP: wait for /hyperbuild-choose)
+    16. Checkpoint — /hyperbuild-choose records the design choice (completed by the hyperbuild-choose skill, never by a step)
+    17. Step 13 — scaffold app
+    18. Step 14 — implement epics
+    19. Step 15 — adversarial review
+    20. Step 16 — ship gate
 
     If the router already seeded these, verify the list matches and move on. TodoWrite is the SECOND resume mechanism (manifest is first) — keep both true at every transition.
 
@@ -203,7 +204,7 @@ You are executing step 1 (intake) of the hyperbuild pipeline. Nothing has run be
 - `runs/<run_tag>/decisions/platform.md` exists, names ONE platform slug, and states whether it was stated or inferred, with evidence
 - `runs/<run_tag>/manifest.json` is valid JSON with `run_tag`, `created`, `gear` (`standard` | `premier`), `stage: "PLAN"`, `platform`, `steps`, `design_choice: null`, `blocked_on: null`
 - `runs/<run_tag>/scaffold.md` exists with all five sections filled (no empty headings)
-- TodoWrite holds one todo per pipeline step (including 3.5 and 4.5) plus the checkpoint todo (19 total), in order
+- TodoWrite holds one todo per pipeline step (including the half-steps 3.5, 4.5 and 8.5) plus the checkpoint todo (20 total), in order
 
 Then update the manifest: `steps.1 = "done"`, mark the step-1 todo complete, return to the router.
 
