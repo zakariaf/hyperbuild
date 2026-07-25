@@ -180,7 +180,7 @@ todo  →  in-progress  →  done
   re-verified (its `files:` exist and its tests pass → flipped `done`; otherwise its
   files are reverted and it flips back to `todo`) — never by hunting for a single
   `in-progress` task.
-- **blocked** — set by step 14 after 3 red implement/test rounds: the task's `files:`
+- **blocked** — set by step 14 after 2 red implement/test rounds: the task's `files:`
   are reverted, a one-line reason recorded, and its dependents leave the ready set.
   A `blocked` task blocks the step 16 ship gate honestly — never fake a `done`.
 - **done** — set by step 14 only after `hb-test-engineer` reports the task's tests

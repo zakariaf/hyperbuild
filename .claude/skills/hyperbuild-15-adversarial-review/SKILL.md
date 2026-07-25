@@ -7,7 +7,12 @@ description: >
   orchestrator ranks and dedupes findings, spawns hb-patcher (TOOL-LOCKED
   to Read + Edit) to apply surgical fixes, and commits the patch pass in
   app/. Structural findings become new task files and trigger AT MOST ONE
-  loop back through step 14.
+  loop back through step 14. TWO PASSES MAXIMUM, and the second runs only
+  when a Tier-0 signal changed between them — new commits, a flipped test
+  count, a flipped skill-gate exit code (PIPELINE.md principle 7). Every
+  pass writes gates/review-uncertainty.md — what the critics could NOT
+  check — which step 16 folds into the ship report's "What I am least
+  confident about".
   Invoked by the hyperbuild router via Skill(); not run directly by users.
 ---
 
@@ -17,7 +22,26 @@ You are executing step 15 (adversarial-review) of the hyperbuild pipeline. Step 
 
 **Goal:** three independent adversarial passes over the WHOLE app — code quality, spec coverage, mockup fidelity — merged into one ranked findings list, applied as surgical patches, with structural gaps routed back through step 14 exactly once at most.
 
-**Loop gate (check FIRST):** if `runs/<run_tag>/gates/review-loop-log.md` exists, this is the SECOND pass — the one permitted loop already ran. On the second pass you re-run the full procedure below but you MUST NOT create new task files: remaining structural findings are recorded as known gaps (procedure item 10). If the loop log does not exist, this is the first pass.
+**RULE OF TWO — no web tools in Stage B.** Every agent this step spawns runs WITHOUT WebFetch and WebSearch: `hb-code-critic` and `hb-ux-critic` are tool-locked to `Read, Grep, Glob, Bash`, `hb-spec-critic` to `Read, Grep, Glob`, `hb-patcher` to `Read, Edit, Grep, Glob`, and `hb-test-engineer` (item 9's red-suite lane) to `Read, Write, Edit, Bash, Grep, Glob`. The restriction is restated verbatim inside every spawn template below so it holds even if an agent definition is later loosened — least privilege, not thrift: these agents hold a shell, repo write, or both over the finished app. **This step's own procedure needs no web access either.** Every standard a critic judges against is already on disk and already verified: the PRD and feature specs, `research/02-engineering/author/stack-guide.md` (corrected by `research/02-engineering/verify/*.md`, which overrides it wherever they disagree), the five generated `app-*` skills, and the chosen design's `tokens.css` + mockups + screenshots. A finding a critic cannot cite from those files is not a finding — external best-practice recall is exactly the unverified input principle 11 exists to keep out of the app. Toolchain network calls (dependency install, the capture commands in `scaffold.md` `## Toolchain`) are toolchain operations and stay allowed; `curl`/`wget`/package-manager search for docs, code, or listings does not.
+
+**Loop gate (check FIRST):** if `runs/<run_tag>/gates/review-loop-log.md` exists, this is the SECOND pass — the one permitted loop already ran. On the second pass you MUST NOT create new task files: remaining structural findings are recorded as known gaps (procedure item 10). If the loop log does not exist, this is the first pass.
+
+**TWO PASSES MAXIMUM, AND THE SECOND ONE IS EARNED (PIPELINE.md principle 7).** Before re-spawning a single critic on a second pass, prove that a TIER-0 SIGNAL CHANGED since the first one. Exactly one of these must be true, and you must record which in `runs/<run_tag>/temp/orchestrator-notes.md` with its evidence:
+
+- `git -C app log --oneline <first-pass-HEAD>..HEAD` is NON-EMPTY — step 14's loop-back actually landed commits (the first pass recorded its HEAD sha in `gates/review-loop-log.md`);
+- the full test suite's pass/fail state or test COUNT differs from the count the first pass recorded;
+- a frozen generated-skill `scripts/*.sh` gate's exit code flipped.
+
+**RUN CONTROL AT THIS PASS BOUNDARY** (the router owns these mechanics — this is the tool call; the authority is `hyperbuild/SKILL.md` "Run control", cited by section number). A pass boundary is one of the in-step checkpoints the router named but cannot reach from its own text, and the router's file is the first thing compaction eats. Before deciding on pass 2, run:
+
+```bash
+[ -f "runs/<run_tag>/ABORT" ] && echo "ABORTED" || echo "CONTINUE"
+echo "elapsed_s=$(( $(date +%s) - $(cat runs/<run_tag>/temp/step-15.start) ))"
+```
+
+**ABORT present** (§2) → do not start pass 2; write the uncertainty file (item 11), record what pass 1 found, and return to the router, which sets `blocked_on: "aborted-by-user"`. **Elapsed past this step's class ceiling** (§3) → stop and report the cap fired rather than shrinking the critic panel to fit under it. **Bump `usage.turns`** for step 15 in the manifest (§4) — measured, never estimated.
+
+**No changed signal → do NOT re-critique.** Skip straight to procedure item 10's second-pass branch: record the surviving findings as known gaps, write the uncertainty file (item 11), and go to step 16. Re-running three opus critics over an identical tree buys a differently-worded copy of the same list at the price of a full critic panel — and the evidence is that a second unaided look is not merely break-even but degrading (95.5 → 91.5 → 89.0 on the closest measured analogue; multi-turn gains "don't compound across turns"). The step-14 loop exists precisely to manufacture the changed signal that licenses pass 2. Nothing else does.
 
 ---
 
@@ -92,7 +116,21 @@ Read these before spawning anything:
      tests on critical paths. Judge against the stack-guide and generated
      skills, NOT your general taste. Set "structural": true when a surgical
      Edit cannot fix it. Do NOT include exact replacement code — the patcher
-     owns the wording. Your final message: counts per severity + the findings
+     owns the wording.
+
+     TOOL POLICY — RULE OF TWO (restated here so it binds regardless of
+     your agent definition): you have NO web access in Stage B. No
+     WebFetch, no WebSearch, no Task — and no fetching docs, code, or
+     package listings through Bash (`curl`, `wget`, a package manager's
+     search/docs subcommand). Your toolset is Read, Grep, Glob, Bash, and
+     Bash is for reading the repo and writing your findings JSON. Every
+     rule you cite must come from the files listed above; a "best
+     practice" you cannot quote from stack-guide.md, a generated app-*
+     skill, or a feature spec is not a finding — the stack-guide's
+     decisions already survived Stage A verification and your recollection
+     did not.
+
+     Your final message: counts per severity + the findings
      path. Data, not prose.
    ```
 
@@ -135,9 +173,18 @@ Read these before spawning anything:
      the feature spec names exist. A feature that compiles but is unreachable,
      or stubbed, or missing its states, is a finding. Cite the feature id
      (F-NN) and the violated acceptance bullet verbatim in evidence. A
-     missing must feature is critical and "structural": true. Your ENTIRE
-     final message is the findings JSON (fenced), then one line of counts
-     per severity. Data, not prose.
+     missing must feature is critical and "structural": true.
+
+     TOOL POLICY — RULE OF TWO (restated here so it binds regardless of
+     your agent definition): you have NO web access in Stage B — no
+     WebFetch, no WebSearch, no Task (and no Write, no Bash). Your toolset
+     is Read, Grep, Glob. Everything you grade against is on disk: the
+     PRD, the feature specs, and the coverage matrix. A gap you cannot
+     anchor to a feature id and a verbatim acceptance bullet is not a
+     finding.
+
+     Your ENTIRE final message is the findings JSON (fenced), then one
+     line of counts per severity. Data, not prose.
    ```
 
    **hb-ux-critic spawn template:**
@@ -201,9 +248,20 @@ Read these before spawning anything:
      finding's evidence. Also grep the UI code for hard-coded values that
      bypass the tokens. One finding per divergence, citing the design
      screenshot (or mockup file) and the token or spec violated. A screen
-     missing entirely is critical and "structural": true. Your final
-     message: counts per severity, screens captured vs fallback-compared,
-     and the findings path. Data, not prose.
+     missing entirely is critical and "structural": true.
+
+     TOOL POLICY — RULE OF TWO (restated here so it binds regardless of
+     your agent definition): you have NO web access in Stage B. No
+     WebFetch, no WebSearch, no Task — and no fetching docs, assets, or
+     code through Bash (`curl`, `wget`, a package manager's search/docs
+     subcommand). Your toolset is Read, Grep, Glob, Bash, and Bash is for
+     the capture commands the toolchain names plus writing your findings
+     JSON. Your baseline is the design screenshots and mockups already on
+     disk plus app/design/tokens.css — never an external reference,
+     screenshot, or style guide you would have looked up.
+
+     Your final message: counts per severity, screens captured vs
+     fallback-compared, and the findings path. Data, not prose.
    ```
 
 4. **NEVER emit bare text while critics are in flight.** A text-only response ends the turn and kills the pipeline. While waiting, append your ranking hypotheses to `runs/<run_tag>/temp/orchestrator-notes.md` via Edit/Write.
@@ -253,12 +311,20 @@ Read these before spawning anything:
      "escalated", not into an oversized patch. Never delete
      and retype a whole file or widget — that is regeneration wearing a
      patch costume.
+
+     TOOL POLICY — RULE OF TWO (restated here so it binds regardless of
+     your agent definition): you have NO web access in Stage B — no
+     WebFetch, no WebSearch, no Task (and no Write, no Bash). Your toolset
+     is Read, Edit, Grep, Glob. Every rule your hunks must satisfy is
+     local: stack_guide, tokens, and the generated app-* skills. A finding
+     whose fix you cannot express from those files goes to "escalated"
+     with the reason — never guessed at.
    ```
 
 9. **Read the patch log; verify the app still stands.** When the patcher returns:
    - **All criticals applied?** A skipped critical is a blocker — re-read the code and either (a) reject the finding as invalid, (b) hand-craft the Edit yourself (you have Edit access; the lock binds only the patcher — broader tools, not broader license), or (c) promote it to a structural task in item 10.
    - **Patch log still the empty stub?** The patcher failed to log — parse the real log out of its Task result and write it to `runs/<run_tag>/gates/review-patch-log.json` via Bash yourself.
-   - **Run the FULL test suite** with the exact test command recorded in `runs/<run_tag>/scaffold.md` `## Toolchain` (step 13 verified it — never re-derive build commands downstream). If red, spawn hb-test-engineer ONCE with the failing test list and the instruction: fix the code the patches broke, NEVER weaken or delete a test. Do not proceed with a red suite.
+   - **Run the FULL test suite** with the exact test command recorded in `runs/<run_tag>/scaffold.md` `## Toolchain` (step 13 verified it — never re-derive build commands downstream). If red, spawn hb-test-engineer ONCE with the failing test list and the instruction: fix the code the patches broke, NEVER weaken or delete a test. Carry the same TOOL POLICY block into that spawn — no WebFetch, no WebSearch, no Task, no doc-fetching through Bash; its toolset is `Read, Write, Edit, Bash, Grep, Glob`, and every matcher and harness flag it needs is in the `app-testing` skill and the stack-guide's committed testing decisions. Do not proceed with a red suite.
    - **Commit the patch pass** (git-is-the-safety-net; step 16's git check expects this commit in the log). On the green suite just verified, with counts from `review-patch-log.json`:
      ```bash
      git -C app add -A && git -C app commit -m "review: adversarial patch pass (<applied> applied, <skipped> skipped, <escalated> escalated)"
@@ -266,14 +332,28 @@ Read these before spawning anything:
      Skip ONLY when `git -C app status --porcelain` is empty (nothing was patched) — note that in orchestrator-notes.md. Never leave a patched working tree uncommitted: step 16 requires a clean tree, and an uncommitted patch pass has no audit trail.
 
 10. **Structural findings → new tasks (FIRST PASS ONLY).**
-    - **Second pass (`gates/review-loop-log.md` exists):** create NOTHING. Append every remaining structural finding under a `## Known gaps` heading in `runs/<run_tag>/gates/review-loop-log.md` — step 16's final message reports them honestly. Skip to Exit criteria.
+    - **Second pass (`gates/review-loop-log.md` exists):** create NOTHING. Append every remaining structural finding under a `## Known gaps` heading in `runs/<run_tag>/gates/review-loop-log.md` — step 16's final message reports them honestly. Then go to item 11 (the uncertainty file is written on every pass) and on to Exit criteria.
     - **First pass, structural findings exist:** cap at 6 tasks — criticals and must-feature gaps first; more than 6 means step 14 under-delivered, so log the overflow as known gaps rather than looping forever. For each retained finding:
       1. Pick the owning epic dir under `epics/`; if none fits, create a new epic dir numbered one above the current highest (e.g. `epics/09-review-fixes/` with a minimal `epic.md` matching step 11's epic schema: frontmatter id/name/depends_on, goal, scope, and `- [ ]` acceptance criteria from the findings).
       2. Write a full task file in that dir following the epic's existing task naming and frontmatter EXACTLY (open a sibling `task-NN-*.md` and match its keys: id, epic, status, depends_on, size, category, features, files — `category` naming a `research/02-engineering/author/stack-guide.md` `## Code taxonomy` category; `files:` listing the exact `app/` paths the task will create or modify — step 14's wave scheduler and step 16's traceability chain both read it; in a brand-new epic dir with no siblings, use step 11's task schema with those same keys) with `status: todo`. Body: context (quote the finding + evidence), spec, files to touch, testing requirements, definition of done.
       3. **Register the loop work — keep step 14's bookkeeping true.** For every epic that received a new task: set its entry in the manifest's `epics` object to `status: "in-progress"` and bump `tasks_total`. For a brand-new epic dir: add its row to `epics/00-overview.md`'s Epics table and Build order, and add a manifest `epics` entry (`{"status": "in-progress", "tasks_total": <N>, "tasks_done": 0}`). Step 14's ready set picks up any `status: todo` task file by scanning `epics/` regardless — but its epic progress notes (14.2) and epic-close accounting (14.7) require the manifest `epics` entry and the 00-overview.md row to exist and carry true `tasks_total`/`tasks_done` counts, so register both.
-    - Write `runs/<run_tag>/gates/review-loop-log.md`: pass 1 date, finding ids retained, task file paths created, overflow findings (if any) under `## Known gaps`.
+    - Write `runs/<run_tag>/gates/review-loop-log.md`: pass 1 date, finding ids retained, task file paths created, overflow findings (if any) under `## Known gaps`, and — REQUIRED, because the second pass's entry condition reads them — a `## Tier-0 signal at pass 1` block recording the exact `git -C app rev-parse HEAD` sha, the test count and pass/fail state from the suite run in item 9, and each frozen skill-gate script with its exit code. Without this block the second pass cannot prove a signal changed, and a pass that cannot prove it does not run.
 
 **AT MOST ONE LOOP THROUGH STEP 14. If you find yourself about to create task files while `gates/review-loop-log.md` already exists, STOP.** Record the findings as known gaps instead. An app that ships with an honest gap list beats a pipeline that oscillates between steps 14 and 15.
+
+11. **Write the uncertainty file — `runs/<run_tag>/gates/review-uncertainty.md`.** Both passes, always, last thing before the exit criteria. This is the build half of the pipeline's calibrated-uncertainty record (PIPELINE.md, [Calibrated uncertainty](../../../PIPELINE.md#calibrated-uncertainty--what-i-am-least-confident-about)); step 16 folds it into `ship-report.md`'s `## What I am least confident about`.
+
+    It records **what the three critics could NOT check** — not what they found. Findings are already in the JSONs; this file is the shape of the hole around them, and you are the only agent that can see it, because you are the one that read all three critics' coverage reports. Derive it mechanically from what came back:
+
+    - **hb-ux-critic** — which screens it captured vs which it fell back to comparing against mockup HTML, and which it could not reach at all. A fidelity verdict on a screen nobody rendered is a reading of source code, and must be labelled as one. Also note that EVERY ux finding is a judge's opinion (Tier 2), never a mechanical result.
+    - **hb-spec-critic** — which features it confirmed by RUNNING a flow vs by reading code or grepping a route name. "Present and wired end-to-end" established by grep is the single most over-trusted sentence in this pipeline.
+    - **hb-code-critic** — which parts of `app/` it actually opened, and the cap it hit: all three critics are capped at 15 findings, so a critic that returned 15 was truncated, and the 16th finding is unknown, not absent.
+    - **Any critic that failed twice and got a `{"findings": []}` stub** — an empty findings file is the absence of a review, not a clean review, and it must say so here in those words.
+    - **Escalated / skipped patcher findings, and the overflow past the 6-task cap** — known, unfixed, and worth a human's attention even though they are already in the logs.
+
+    Format: a short `## What step 15 could not check` heading, then 3–6 bullets. Each bullet names the artifact or feature by path/id, states plainly what was not verified, and says what would settle it. No hedging prose, no "further review is recommended". If a pass genuinely checked everything it was supposed to, say that in one line — but say it only if the coverage numbers back it, and put the numbers in the line.
+
+    On a second pass, append to the existing file under a `## Pass 2` heading rather than overwriting: the first pass's coverage gaps are still true unless pass 2 closed them.
 
 ---
 
@@ -306,7 +386,8 @@ Read these before spawning anything:
   }
   ```
 - `runs/<run_tag>/gates/review-patch-log.json` — stubbed by orchestrator, populated by hb-patcher (canonical keys: total_findings, applied, skipped, conflicts, escalated — the same key set as step 14's per-epic patch logs).
-- `runs/<run_tag>/gates/review-loop-log.md` — first-pass record of structural tasks created; `## Known gaps` section for anything not looped. Its existence IS the loop counter.
+- `runs/<run_tag>/gates/review-loop-log.md` — first-pass record of structural tasks created; `## Known gaps` section for anything not looped; `## Tier-0 signal at pass 1` (HEAD sha, test count + state, frozen skill-gate exit codes) — the second pass's entry condition reads it. Its existence IS the loop counter.
+- `runs/<run_tag>/gates/review-uncertainty.md` — what the three critics could NOT check, in 3–6 named bullets (procedure item 11). Step 16 folds it into `ship-report.md`'s `## What I am least confident about`. Written on EVERY pass, including a pass that was skipped for want of a changed Tier-0 signal.
 - New `epics/NN-<slug>/task-NN-<slug>.md` files with `status: todo` (first pass only).
 
 ---
@@ -319,6 +400,8 @@ Read these before spawning anything:
 - Full test suite green after the patch pass
 - Patch pass committed in `app/` (`review: adversarial patch pass (<counts>)`) — or the
   working tree was already clean because nothing was patched, noted in orchestrator-notes.md
+- `runs/<run_tag>/gates/review-uncertainty.md` exists and is non-empty (procedure item 11) — required on every pass, including a second pass that was skipped for want of a changed Tier-0 signal
+- On a first pass that creates tasks: `review-loop-log.md` carries its `## Tier-0 signal at pass 1` block, so the second pass has something to compare against
 
 Then route by pass:
 

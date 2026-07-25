@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "disableAllHooks": false,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/guard-bash.sh\"",
+            "timeout": 10,
+            "statusMessage": "guardrail: inspecting command"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/guard-write.sh\"",
+            "timeout": 10,
+            "statusMessage": "guardrail: inspecting write target"
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "matcher": "user_settings|project_settings|local_settings|policy_settings|skills",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/guard-write.sh\" --notify",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"hyperbuild guardrails are ACTIVE (docs/GUARDRAILS.md). PreToolUse hooks BLOCK, with exit code 2: force push, git reset --hard, recursive rm outside the repo, package publish, gh release create and gh repo delete, chmod -R 777, credential writes, writes outside the repository, and edits to .claude/skills/app-*/scripts/**, runs/*/gates/skill-scripts/** and scripts/gate-*.sh while a run is in stage BUILD (the frozen oracle). Everything inside the repository stays writable, including .claude/, docs/, scripts/ and evals/ - harness development is not restricted. If a guardrail blocks you, report it to the human and stop; never rewrite the command, the hook scripts, or .claude/settings.json to get around it.\"}}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.*.local)",
+      "Read(**/*.pem)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/.npmrc)",
+      "Read(**/.netrc)",
+      "Edit(~/.claude/settings.json)",
+      "Edit(//etc/**)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh release *)",
+      "Bash(gh repo *)",
+      "Bash(npm publish *)",
+      "Bash(pnpm publish *)",
+      "Bash(yarn publish *)",
+      "Edit(/.claude/settings.json)",
+      "Edit(/scripts/hooks/**)",
+      "Edit(/scripts/gate-design.sh)",
+      "Edit(/scripts/gate-ship.sh)"
+    ]
+  },
+  "sandbox": {
+    "credentials": {
+      "files": [
+        { "path": "~/.ssh", "mode": "deny" },
+        { "path": "~/.aws", "mode": "deny" },
+        { "path": "~/.gnupg", "mode": "deny" },
+        { "path": "~/.claude/.credentials.json", "mode": "deny" }
+      ],
+      "envVars": [
+        { "name": "GITHUB_TOKEN", "mode": "deny" },
+        { "name": "GH_TOKEN", "mode": "deny" },
+        { "name": "NPM_TOKEN", "mode": "deny" }
+      ]
+    }
+  },
+  "env": {
+    "CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS": "600000"
+  }
+}

@@ -32,7 +32,8 @@ Three documents anchor everything:
   `runs/<run_tag>/manifest.json` records transitions; recovery is manifest → TodoWrite
   → artifact scan. No step trusts the orchestrator's memory.
 - **Two hard gates** (step 12 design gate, step 16 ship gate) verify artifacts
-  mechanically, ≤3 fix rounds, then an honest blocked state.
+  mechanically, ≤2 fix rounds (the second only if a Tier-0 signal changed), then an honest
+  blocked state.
 
 ## Editing rules
 

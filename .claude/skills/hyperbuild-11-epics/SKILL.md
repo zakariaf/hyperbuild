@@ -40,7 +40,7 @@ Scale knobs (gear from manifest):
 |------|----------|---------|
 | Epics | 4–8 | 6–12 |
 | Tasks per epic | 3–8 | 4–10 |
-| Critic fix rounds | ≤3 | ≤3 |
+| Critic fix rounds | ≤2 | ≤2 |
 
 **Task-sizing rules (binding on the planner, the authors, and your own patches):** one
 component / model / service / screen-section per task where feasible; a task an
@@ -274,7 +274,7 @@ prompt: |
   PIPELINE POSITION: You are the step 11 coverage auditor of the hyperbuild
   pipeline. Task authors just wrote the backlog under epics/; you audit it
   against the PRD and feature specs; the orchestrator patches the gaps you
-  find (max 3 rounds). A gap you miss surfaces as a step 12 gate failure —
+  find (max 2 rounds). A gap you miss surfaces as a step 12 gate failure —
   or worse, a feature silently missing from the shipped app. You are
   tool-locked to [Read, Grep, Glob] — you audit; you NEVER edit.
 
@@ -320,8 +320,9 @@ Save the returned JSON verbatim to `runs/<run_tag>/temp/epic-coverage-findings.j
 For every `critical`/`major` finding: fix the ARTIFACT. 1–2 missing tasks → write them
 yourself using the task schema exactly. 3+ gaps in one epic → re-spawn that epic's
 `hb-task-author` with `assigned_features` narrowed to the gap ids. Matrix drift →
-re-derive `00-overview.md` from disk. Then re-spawn `hb-spec-critic` fresh. **Max 3
-audit rounds** (≤3 both gears). Zero criticals is mandatory to exit; log residual minor
+re-derive `00-overview.md` from disk. Then re-spawn `hb-spec-critic` fresh. **Max 2
+audit rounds** (≤2 both gears — the router's knobs table, the one row that does not widen
+with the gear). Zero criticals is mandatory to exit; log residual minor
 findings to `orchestrator-notes.md` and proceed. Never regenerate the whole backlog.
 
 ## Artifacts
@@ -336,7 +337,7 @@ findings to `orchestrator-notes.md` and proceed. Never regenerate the whole back
 - `epics/00-overview.md` exists; coverage matrix has zero blank Tasks cells on must/should rows
 - Epic count within gear range; every epic dir has `epic.md` + task count within gear range; every task file has valid frontmatter with `status: todo`, a `category` naming a stack-guide `## Code taxonomy` category, a non-empty `files:` list of planned repo-relative paths (assembly tasks overlapping their parts' `files:` only on the composition file(s) they own), and all five body sections
 - Task-sizing rules hold: zero `size: L` tasks (split instead); every `size: M` task justified in `## Context`; every screen with tasks decomposed into subcomponent tasks/checklist items + an assembly task
-- Final `epic-coverage-findings.json` verdict is `pass` (or all critical/major findings patched within 3 rounds — if criticals remain after round 3, STOP: set manifest `blocked_on: "epic-coverage"` and report honestly instead of proceeding)
+- Final `epic-coverage-findings.json` verdict is `pass` (or all critical/major findings patched within 2 rounds — if criticals remain after round 2, STOP: set manifest `blocked_on: "epic-coverage"` and report honestly instead of proceeding)
 - Then update manifest: `steps.11 = "done"`, mark the step-11 todo complete, return to the router.
 
 ## Next step

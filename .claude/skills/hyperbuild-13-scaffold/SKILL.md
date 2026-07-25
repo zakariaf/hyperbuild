@@ -28,6 +28,30 @@ router, do not scaffold anything.
 design's tokens, with a green smoke test — plus recorded toolchain commands so steps
 14–16 never have to guess how to build, test, or lint.
 
+## RULE OF TWO — no web tools in Stage B
+
+Every agent this step spawns runs WITHOUT WebFetch and WebSearch (`hb-implementer` is
+tool-locked to `Read, Write, Edit, Bash, Grep, Glob`), and the restriction is restated
+verbatim inside the spawn template below so it holds even if an agent definition is later
+loosened. The reason is least privilege, not thrift: a build agent already holds repo
+write, a shell, and a live git working tree, and an agent holding those three must not
+also ingest untrusted external content.
+
+**This step's OWN procedure needs no web access either.** The scaffolder, lint tool,
+formatter, test framework, CI shape, project structure, and every version they pin are
+already committed in `research/02-engineering/author/stack-guide.md` (corrected by
+`research/02-engineering/verify/*.md`, which overrides the guide wherever they disagree)
+and `runs/<run_tag>/decisions/platform.md`. If the stack-guide is silent on something you
+need, that is a STAGE A GAP, not a research errand: log it to
+`runs/<run_tag>/temp/orchestrator-notes.md` and treat it exactly like a missing SDK —
+`blocked_on: "toolchain: <gap>"`, honest report, stop. Do NOT research it here.
+
+The network calls the scaffold command and dependency install make (`npm create`,
+`flutter pub get`, `cargo fetch`, …) are TOOLCHAIN operations against the stack-guide's
+committed package set, not web ingestion — they stay allowed. Fetching documentation,
+code, or package listings with `curl`/`wget`/a package manager's search subcommand does
+not, in this step or in any agent it spawns.
+
 ## Inputs
 
 Recover `run_tag` from disk (the `runs/*/manifest.json` whose `stage` is `"BUILD"`), never
@@ -189,6 +213,21 @@ prompt: |
      does this; otherwise write one). Run the full test suite AND the build;
      both must pass before you return.
 
+  TOOL POLICY — RULE OF TWO (restated here so it binds regardless of your
+  agent definition): you have NO web access in Stage B. No WebFetch, no
+  WebSearch, no Task — and no fetching docs, code, or package listings
+  through Bash (`curl`, `wget`, a package manager's search/docs
+  subcommand). Your toolset is Read, Write, Edit, Bash, Grep, Glob, and
+  Bash is for this project's toolchain only: the scaffold/build/test/lint/
+  format commands and the dependency installs the stack-guide commits to.
+  Every API, version, config key, and command you need is already in
+  stack-guide.md (research/02-engineering/verify/*.md overrides it where
+  they disagree) and the generated app-* skills. If something you need is
+  in neither, STOP and report back the exact question and the file you
+  expected to answer it — the orchestrator resolves it from the Stage A
+  artifacts. Never guess a lint rule name, a CI action version, or a
+  framework API.
+
   Do NOT implement any PRD feature or screen. Do NOT touch files outside app/.
   Do NOT invent tooling the stack-guide didn't choose. Do NOT commit — the
   orchestrator commits after independent verification.
@@ -214,7 +253,8 @@ Run yourself, from the report-back's exact commands:
    `grep` each in the theme file(s). All 5 must appear.
 
 Any failure: re-spawn hb-implementer with the same template plus a `FAILURE LOG:` block
-containing the full command output. Max 3 fix rounds (the same ≤3 cap the gates use).
+containing the full command output. Max 2 fix rounds (the same ≤2 cap the gates use;
+round 2 only if a command's exit code or error actually changed).
 Still failing → manifest `blocked_on: "scaffold-verification"`, honest report, stop.
 
 ### 13.6 Record the toolchain

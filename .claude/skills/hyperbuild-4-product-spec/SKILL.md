@@ -221,7 +221,7 @@ If `author/competitor-landscape.md`, `author/sentiment-synthesis.md`, or `critiq
     - Fixing an untraced must: find real evidence in the vault, or DEMOTE the feature. Never invent a citation to satisfy the critic.
     - Screen-inventory fixes (add/rename/merge screens) are legal HERE and only here — this is the last moment before the inventory freezes.
     - Reject findings that contradict the verbatim idea; log each rejection with one line of reasoning appended to `runs/<run_tag>/temp/prd-critic-findings.json` under a `"rejected"` key.
-    - If any finding was `critical`, re-spawn the critic ONCE (same template) to verify the patches. Max 3 critic rounds total; after round 3, move any still-open finding into the PRD's `## Open questions` honestly and proceed.
+    - If any finding was `critical`, re-spawn the critic ONCE (same template) to verify the patches. Max 2 critic rounds total; after round 2, move any still-open finding into the PRD's `## Open questions` honestly and proceed.
 
 ---
 
@@ -239,7 +239,7 @@ If `author/competitor-landscape.md`, `author/sentiment-synthesis.md`, or `critiq
 - Every top-5 pain point in `sentiment-synthesis.md` is answered by a feature or declined in Won't
 - Screen inventory: every screen named + slugged; count ≤ 12 (standard) / ≤ 20 (premier); every must/should maps to ≥1 screen; every screen classified `mockup_feasibility: full | partial | none`, every `partial` with its one-line what-IS-mockable note
 - must+should count ≤ 15 (standard) / ≤ 25 (premier)
-- Critic ran ≥1 round; every finding is patched, rejected-with-reason, or moved to Open questions (≤3 rounds)
+- Critic ran ≥1 round; every finding is patched, rejected-with-reason, or moved to Open questions (≤2 rounds)
 
 Then update manifest: `steps.4 = done`, mark the step-4 todo complete, return to the router.
 

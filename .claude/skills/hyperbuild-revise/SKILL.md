@@ -405,7 +405,7 @@ Changed: <artifact paths>. Re-ran: <steps>. Full log: runs/<run_tag>/decisions/r
 Revise again with `/hyperbuild-revise <change>` · new design directions with `/hyperbuild-redesign [notes]`
 ```
 
-If the gate BLOCKS after its 3 fix rounds, do not soften it: the run stays
+If the gate BLOCKS after its 2 fix rounds, do not soften it: the run stays
 `blocked_on: "design-gate"`, and the ledger entry's `Outcome:` records `gate blocked —
 <failed checks>`. A revision that broke the run says so.
 

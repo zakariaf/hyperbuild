@@ -70,11 +70,11 @@ Area 01 binds the engine like this, then runs phases **V1 → V6** below verbati
 | `CRITIQUE_DIR` | `research/01-product-and-market/critique/` |
 | `AUTHOR_DOCS` | `research/01-product-and-market/author/competitor-landscape.md`, `research/01-product-and-market/author/sentiment-synthesis.md` |
 | `INDEX` | `research/01-product-and-market/_INDEX.md` |
-| `PANEL` | completeness → `hb-corpus-critic` → `critique/completeness-critic.md` · skeptic → **`hb-research-critic`** → `critique/research-audit.md` · premier only: domain → `hb-corpus-critic` → `critique/domain-<slug>-critic.md` |
+| `PANEL` | completeness → `hb-corpus-critic` → `critique/completeness-critic.md` · **`live-evidence`** → **`hb-research-critic`** → `critique/research-audit.md` · premier only: domain → `hb-corpus-critic` → `critique/domain-<slug>-critic.md` |
 | `VERIFY_BUDGET` | ≤25 standard / ≤60 premier |
 | `CONSUMER` | step 4 (the PRD) |
 
-**Area-01 panel exception (deliberate, do not copy to other areas):** the skeptic seat is filled by `hb-research-critic`, not `hb-corpus-critic`. Area 01's evidence is social posts, store reviews and vendor pages, so its skeptic lens needs live fetches: syndication clustering (reposts, crossposts, aggregator mirrors and quote-tweets of one origin are ONE source) and verbatim quote integrity cannot be judged from the corpus alone. Areas 02–04 fill all seats with `hb-corpus-critic`.
+**Area-01 panel exception (deliberate, do not copy to other areas):** area 01's second seat is `live-evidence`, filled by `hb-research-critic`, not `hb-corpus-critic`. Area 01's evidence is social posts, store reviews and vendor pages, so the seat needs live fetches: syndication clustering (reposts, crossposts, aggregator mirrors and quote-tweets of one origin are ONE source) and verbatim quote integrity cannot be judged from the corpus alone. The lens is named `live-evidence` rather than `skeptic` precisely so it cannot collide with `hb-corpus-critic`'s own `skeptic` lens — **at `standard` area 01's two seats are `completeness` + `live-evidence`, and the two must stay DISTINCT**; at `premier` the third seat is `domain:<slug>`. Areas 02–04 fill all seats with `hb-corpus-critic`.
 
 ---
 
@@ -250,11 +250,11 @@ Single-claim fact-checks cannot see the defect class where three dimensions each
 | Lens | Critic file | Std | Prem | Lens brief |
 |---|---|---|---|---|
 | completeness | `completeness-critic.md` | yes | yes | Which dimension was NEVER researched? What did every agent assume without checking? Where is the corpus silent on something `CONSUMER` must decide? |
-| skeptic | `research-audit.md` (area 01) | yes | yes | Which conclusions does the evidence NOT support? Name the claims whose support is one source, one blog post, or one syndicated cluster; name what verification changed. |
+| live-evidence | `research-audit.md` (area 01) | yes | yes | The ENUMERATED C1–C7 checklist in `hb-research-critic.md`, all seven every run: C1 syndication clustering + recount + rank re-derivation · C2 source independence · C3 verbatim quote integrity fetched at the URL · C4 staleness vs each competitor's own last release · C5 live spot-checks strictly OUTSIDE the `verify/` set · C6 sample-frame coverage · C7 demand-vs-supply collision. Every assertion about the world comes from a URL you actually fetched, with its access date. |
 | domain | `domain-<slug>-critic.md` | — | yes | The area's own expert lens (regulatory/clinical/security/accessibility/market — pick from the idea), attacking the corpus on domain grounds the generalists cannot see. |
 
 ```
-subagent_type: hb-corpus-critic          # area 01 skeptic seat: hb-research-critic
+subagent_type: hb-corpus-critic          # area 01's 2nd seat: hb-research-critic, lens live-evidence
 prompt: |
   APP IDEA (verbatim, gospel):
   > {{paste the body of runs/<run_tag>/idea.md}}
@@ -273,7 +273,7 @@ prompt: |
   YOUR INPUTS:
   - run_tag: <run_tag>
   - area: <AREA>
-  - lens: <completeness | skeptic | domain:<slug>>
+  - lens: <completeness | skeptic | domain:<slug>>   # area 01's 2nd seat: live-evidence
   - lens_brief: <the row from the panel table, verbatim>
   - output_path: <CRITIQUE_DIR><critic-file>
   - other_seats: [<the other lenses running in parallel — do not
@@ -297,7 +297,13 @@ prompt: |
 
 **While the critics run: never emit bare text** — keep appending to `runs/<run_tag>/temp/orchestrator-notes.md`.
 
-Area 01's skeptic seat spawns `hb-research-critic` instead, and its prompt adds an `audit_surface`: the top 5 pain points + top 5 wish-list items verbatim with their Q-ids, the load-bearing landscape claims, the top quotes, and THE SYNDICATION RULE — cluster reposts, crossposts, syndicated articles and quote-tweets by origin BEFORE any frequency verdict, recount over clusters, and fetch each top quote's URL to confirm the text appears verbatim. It returns per-claim `A-NN` entries with SYNTHESIS-level verdicts `upheld | weakened | refuted`; V5 treats a `refuted` A-NN exactly like a REFUTED claim (same `## Refuted by verification` section, citing `critique/research-audit.md` A-NN) and a `weakened` one like PARTIALLY_TRUE, annotated `[weakened by audit: <reason> — critique/research-audit.md A-NN]`.
+Area 01's second seat spawns `hb-research-critic` instead, with **`lens: live-evidence`** (never `skeptic` — that lens belongs to `hb-corpus-critic` and two seats on one lens is a wasted seat), and its prompt adds two things.
+
+First, one instruction, verbatim:
+
+> **Run the enumerated C1–C7 checklist in your agent file. All seven rows must appear in `## Checklist coverage`, and `none` in the findings column is a result — a blank or missing row is an incomplete file and gets re-spawned.**
+
+Second, an `audit_surface`: the top 5 pain points + top 5 wish-list items verbatim with their Q-ids, the load-bearing landscape claims, the top quotes, each competitor's own last-release date if the corpus recorded one, and how the sample was drawn (which platforms, which queries, what window) — C4, C6 and C7 have nothing to work on without those last two. THE SYNDICATION RULE is stated in the same breath: cluster reposts, crossposts, syndicated articles and quote-tweets by origin BEFORE any frequency verdict, recount over clusters, re-derive the rank from the frequency × intensity scores, and fetch each top quote's URL to confirm the text appears verbatim. Its `lens_brief` is the `live-evidence` row of the panel table above — the C1–C7 summary — NOT the corpus critic's skeptic brief. It returns per-claim `A-NN` entries with SYNTHESIS-level verdicts `upheld | weakened | refuted`; V5 treats a `refuted` A-NN exactly like a REFUTED claim (same `## Refuted by verification` section, citing `critique/research-audit.md` A-NN) and a `weakened` one like PARTIALLY_TRUE, annotated `[weakened by audit: <reason> — critique/research-audit.md A-NN]`.
 
 ### V5 — Patch the `AUTHOR_DOCS` yourself (orchestrator only, surgical Edits)
 

@@ -359,7 +359,9 @@ Then MERGE into the canonical `runs/<run_tag>/gates/visual-qa-<letter>.json` you
 - round-2's NEW findings appended with `"round": 2`, `"status": "open"`
 - recompute `counts` and `unresolved_critical` (= criticals whose status is `open`)
 
-**MAX 2 CRITIC ROUNDS = exactly ONE patch round. There is no round 3.** A third pass costs another six subagents and, on the evidence, converges on taste rather than defects. This cap is deliberately STRICTER than the gear table's `≤3` gate-fix-round budget (which governs the step 12 and 16 gates); what survives here is not looped on, it is written down and shown to the user.
+**MAX 2 CRITIC ROUNDS = exactly ONE patch round. There is no round 3.** A third pass costs another six subagents and, on the evidence, converges on taste rather than defects. This is the same `≤2` budget the gear table binds the step 12 and 16 gates to, applied stricter in practice: two critic rounds means exactly one patch round, and the second critic round is itself Tier-0-conditional (a re-rendered screenshot that actually differs). What survives here is not looped on, it is written down and shown to the user.
+
+**RUN CONTROL AT THE ROUND BOUNDARY** (the router owns these mechanics — this is the tool call; the authority is `hyperbuild/SKILL.md` "Run control", cited by section number). Before spawning round 2's critics: `[ -f "runs/<run_tag>/ABORT" ] && echo ABORTED || echo CONTINUE` (§2 — ABORT present means do not start the round; write what round 1 found and return to the router, which sets `blocked_on: "aborted-by-user"`), check elapsed against `runs/<run_tag>/temp/step-8.5.start` (§3 — a fired ceiling is reported, never worked around by dropping directions or screens), and bump `usage.turns` for step 8.5 (§4, measured never estimated).
 
 ### 8.5.8 — Distinctness pass (orchestrator, judged on PIXELS)
 

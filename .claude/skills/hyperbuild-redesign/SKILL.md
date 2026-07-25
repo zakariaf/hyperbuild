@@ -491,7 +491,7 @@ the stop message. Add these lines to that message, directly above the
 Still not right? `/hyperbuild-redesign <more notes>` — say what to keep and what to fix.
 ```
 
-If the gate BLOCKS after its 3 fix rounds, leave it blocked and say which checks failed;
+If the gate BLOCKS after its 2 fix rounds, leave it blocked and say which checks failed;
 the ledger's `Outcome:` records `gate blocked — <failed checks>`. Never soften it.
 
 ### 10. Record the round in the ledger

@@ -9,3 +9,9 @@ research/harvest/*/
 
 # Per-run scratch
 runs/*/temp/
+
+# Machine-local run control (runs/README.md). NEVER commit these:
+# a committed .lock carries a foreign pid+host and the router refuses to reclaim it
+# (kill -0 is meaningless cross-host), and a committed ABORT halts every clone of the run.
+runs/*/.lock
+runs/*/ABORT

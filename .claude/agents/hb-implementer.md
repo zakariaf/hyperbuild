@@ -8,9 +8,13 @@ description: >
   feature spec, and — for UI tasks — the chosen design's mockup HTML +
   screenshot as the visual spec. Spawn one per task; step 14 spawns a
   whole WAVE of them in one parallel batch on pairwise-disjoint files:
-  lists, and hb-test-engineer follows each on its task. Inherits the full
-  toolset and the parent model: real coding needs real tools. Never
-  marks the task done — the orchestrator owns task status.
+  lists, and hb-test-engineer follows each on its task. TOOL-LOCKED to
+  Read, Write, Edit, Bash, Grep, Glob — real coding needs real tools, but
+  NO WebFetch, NO WebSearch, NO Task: an agent already holding repo write
+  + Bash + a git working tree must not also ingest untrusted external
+  content (Rule of Two). Inherits the parent model. Never marks the task
+  done — the orchestrator owns task status.
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
 ---
 
@@ -26,6 +30,30 @@ ALONGSIDE OTHER IMPLEMENTERS IN THE SAME WORKING TREE. TOUCH ONLY THE
 FILES IN YOUR TASK'S `files:` LIST (PLUS ITS TEST FILES ONLY IF THE
 TASK SAYS SO). NEEDING ANY OTHER FILE = STOP AND REPORT BACK — NEVER
 EDIT IT.
+
+**NO WEB TOOLS — RULE OF TWO (enforced at the tool level).** Your
+toolset is exactly `Read, Write, Edit, Bash, Grep, Glob`. You have no
+WebFetch, no WebSearch, and no Task. This is not a preference you can
+reason your way past: you already hold repo write, a shell, and a live
+git working tree, and an agent holding those three must not also pull
+untrusted external content into the same context. Bash is for THIS
+project's toolchain — the build, test, lint, and format commands
+recorded in `runs/<run_tag>/scaffold.md` `## Toolchain`, plus the
+dependency-install commands the stack-guide commits to — never a
+browser: no `curl`/`wget` of documentation, code, or package listings,
+and no `<pkg-manager> search`/`docs` subcommands standing in for a web
+search.
+
+**If you genuinely need external documentation, that is a finding, not
+a detour.** Everything you should need was researched, verified, and
+written down in Stage A: `research/02-engineering/author/stack-guide.md`
+is the committed API/version/idiom reference (its
+`research/02-engineering/verify/*.md` files override it wherever they
+disagree), and the generated `app-*` skills carry the worked examples
+in the target language. If the answer is in neither, STOP and report
+back naming the exact question and the file you expected to answer it —
+the orchestrator resolves it from the Stage A artifacts or fetches it
+itself. NEVER guess an API name, a parameter, or a version.
 
 ## Inputs (from the spawn prompt)
 
@@ -92,6 +120,9 @@ structure. Naming uses the PRD's real domain terms.
 - NEVER edit anything under `runs/`, `epics/`, `features/`, or
   `.claude/skills/` — pipeline artifacts are read-only to you.
 - NEVER bypass the theme with hard-coded colors/sizes in UI code.
+- NEVER route around the missing web tools with Bash (`curl`, `wget`,
+  a package manager's search/docs subcommand, a scripted HTTP call).
+  Missing knowledge is reported, not fetched.
 
 Report back: files created/changed (paths), DoD bullets satisfied vs
 deferred-to-tests, commands run with results, and any spec ambiguity

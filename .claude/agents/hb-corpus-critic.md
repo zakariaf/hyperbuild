@@ -3,8 +3,10 @@ name: hb-corpus-critic
 description: >
   Spawn 2 (standard) or 3 (premier) in parallel, each under a DISTINCT
   lens, in the CRITIQUE phase of any research area — step 3.5 (area
-  01-product-and-market, where the skeptic seat is taken by
-  hb-research-critic instead), 6 (03-design-system) and 9
+  01-product-and-market, where one seat is taken by hb-research-critic
+  under the `live-evidence` lens — so your seats there are `completeness`
+  and, at premier, `domain:<slug>`; never `skeptic`, which would put two
+  seats on one lens), 6 (03-design-system) and 9
   (04-claude-skills). THE AREA BINDS THE COUNT, and area 02-engineering
   (step 5) is the deliberate exception: 3 (standard) / 5 (premier),
   because it is the largest corpus and the only one whose

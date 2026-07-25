@@ -3,8 +3,10 @@
 hyperbuild is a two-stage, 19-step Claude Code pipeline (steps 1–12 plus half-steps 3.5,
 4.5 and 8.5 = Stage A PLAN; steps 13–16 = Stage B BUILD) with exactly ONE human checkpoint between the
 stages. This document is the architecture reference: the principles, every step's
-contract, the state layout, both gates, the subagent spawn contract, and the lineage back
-to hyperresearch — the deep-research harness this design is copied from.
+contract, the state layout, both gates, the subagent spawn contract, the
+[enforcement and observability layer](#enforcement-and-observability) that makes the
+contracts non-optional, and the lineage back to hyperresearch — the deep-research harness
+this design is copied from.
 
 The entry skill `hyperbuild` is a thin router; each step is its own skill under
 `.claude/skills/hyperbuild-N-<name>/` (19 step skills + the router + the three gate-time
@@ -49,12 +51,27 @@ command skills `hyperbuild-choose`, `hyperbuild-revise`, `hyperbuild-redesign`
    (`hb-code-critic`, `hb-spec-critic`, `hb-ux-critic`) that emit findings JSON and NEVER
    edit. Fixes are applied as surgical edits by a tool-locked patcher (`hb-patcher`,
    Read+Edit only) — patch, never regenerate. The lock is physical: the patcher has no
-   Write tool, so it cannot create files or rewrite wholesale.
+   Write tool, so it cannot create files or rewrite wholesale. Capability, not instruction,
+   is the enforcement mechanism throughout — see
+   [Enforcement and observability](#enforcement-and-observability), which extends the same
+   idea to deny hooks, per-step tool splits, frozen gate scripts, caps, and a lockfile.
 
-7. **Hard gates.** A stage is complete only when its gate's checklist passes. Gate
-   failures are fixed by changing the artifacts, never by re-interpreting the checks.
-   Max 3 fix rounds, then the run stays blocked and says so honestly. Gate errors are
-   facts about the artifacts, not opinions to assess.
+7. **Hard gates, on a two-round fix budget.** A stage is complete only when its gate's
+   checklist passes. Gate failures are fixed by changing the artifacts, never by
+   re-interpreting the checks. Gate errors are facts about the artifacts, not opinions to
+   assess. **MAX 2 FIX ROUNDS**, and the second round is CONDITIONAL: it runs only when a
+   TIER-0 SIGNAL CHANGED between the two attempts — a test flipped, a script gate's exit
+   code flipped, a re-render differs, a file that was absent now exists, a count that was
+   short now clears. Same red checks against the same evidence with no changed mechanical
+   signal is not a fix round; the run stays blocked immediately and says exactly what is
+   red. The budget used to be 3, and 3 is not supported by anything: unaided
+   self-correction DEGRADES across rounds (GPT-4 on GSM8K, no external signal:
+   95.5 → 91.5 → 89.0), the multi-turn evidence is that gains "don't compound across
+   turns", and the one published multi-round QA loop is flat rather than converging. A
+   round with no new mechanical evidence is the model re-reading its own output and
+   talking itself into a different answer — the failure this pipeline spends its whole
+   critic budget avoiding. Step 8.5 has always run this budget (MAX 2 critic rounds) and
+   its reasoning generalizes: what survives here is written down, not looped on.
 
 8. **Never emit bare text while subagent tasks are in flight.** In headless mode a
    text-only response triggers `end_turn` and kills the pipeline. While waiting, append
@@ -181,18 +198,31 @@ area 01's `critique/` phase plus its index, the last two phases of principle 11'
 sequence, and it runs AFTER every `verify/` file from steps 2 and 3 has landed.
 
 The area gets 2 critic seats at `standard` (3 at `premier`), spawned in ONE message, each
-under a DISTINCT lens: in area 01 one seat is always `hb-research-critic` (the skeptic
-lens it has always owned — see below) and the rest are `hb-corpus-critic`. Each reads
+under a DISTINCT lens: in area 01 one seat is always `hb-research-critic` under the
+**`live-evidence`** lens (see below) and the rest are `hb-corpus-critic`. Each reads
 the WHOLE area corpus — every competitor dossier, every sentiment file, and every
 `verify/` verdict — hunting the defect class no single-claim fact-check can see:
 contradictions BETWEEN dimensions (two dossiers describing incompatible pricing for one
 product; a pain point the competitive set says is already solved), coverage holes, and
 claims whose support collapses once the corpus is read as a whole. Each critic separates
 what it actually ran or read (`[VERIFIED]`) from what it merely reasoned about
-(`[OPEN]`), and NEVER edits another agent's file. The `hb-research-critic` seat runs the
-corpus-level refutation pass it has always owned: the top pain points and wish-list items
-attacked directly, and syndicated/derivative copies clustered so a story reposted five
-times argues with the weight of ONE source.
+(`[OPEN]`), and NEVER edits another agent's file.
+
+The `hb-research-critic` seat is NOT a renamed corpus critic, and the difference is a
+capability, not a job title: **`hb-corpus-critic` has no web tools at all**, so by its own
+contract every statement it makes about the outside world is `[OPEN]` reasoning. Area 01's
+evidence IS the outside world — social posts, store listings, vendor pricing pages — and
+the defects that matter there cannot be found by reading files. So `hb-research-critic`
+runs an ENUMERATED SEVEN-CHECK LIST under the `live-evidence` lens, and every item on it is
+either impossible without a live fetch or covered by no corpus-critic lens: syndication
+clustering with an explicit `before → after` recount and the rank re-derived from the
+frequency × intensity scores, source independence (no vendor, author or cluster supplying
+more than one unit of support), verbatim quote integrity checked at the URL, staleness of
+every load-bearing competitor fact against that competitor's own last release, live
+spot-checks confined to claims the `verify/` phase did NOT select, sample-frame coverage
+(which segment of the idea's stated audience nobody mined), and demand-vs-supply collisions
+where a top pain point is already solved by the competitive set. Full checklist and output
+contract: `.claude/agents/hb-research-critic.md`.
 
 The orchestrator then resolves the whole area: every CONFIRMED critic finding and every
 `verify/` correction is applied to the `author/` docs — REFUTED claims removed from the
@@ -391,9 +421,12 @@ Findings land as `runs/<run_tag>/gates/visual-qa-{a,b,c}.json` — per-screen, p
 each with the screenshot path and the named rule it violates. Critics NEVER edit
 (principle 6). Every defect re-spawns the `hb-mockup-smith` that drew the offending
 screen with the screenshot path and the defect named verbatim; the orchestrator
-re-renders and re-critiques. MAX 2 critic rounds = exactly ONE patch round (deliberately
-stricter than the ≤3 gate-fix-round budget: what survives here is written down, not looped
-on), then unresolved defects are carried into the
+re-renders and re-critiques. MAX 2 critic rounds = exactly ONE patch round — the same
+2-round budget principle 7 now binds every gate to, and stricter in practice because two
+critic rounds buy exactly one patch attempt; this step's reasoning is the one that
+generalized ("what survives here is written down, not looped on"), and its second critic
+round is already conditional on a changed Tier-0 signal: a re-rendered screenshot that
+differs from the one the first round judged. Unresolved defects are carried into the
 step 12 report as explicit warnings so the human sees them at the gate instead of
 discovering them in the pixels.
 
@@ -492,7 +525,11 @@ decision, epic/task counts), says how to open `runs/<run_tag>/designs/index.html
 asks for `/hyperbuild-choose a|b|c` — plus one line each for `/hyperbuild-revise` and
 `/hyperbuild-redesign`, so "none of these yet" is an answer the user can give at the stop.
 Unresolved step 8.5 defects appear in the report as named warnings, never omissions.
-Manifest: `blocked_on: "design-choice"`.
+The report also carries the mandatory **`## What I am least confident about`** section
+(see [Calibrated uncertainty](#calibrated-uncertainty--what-i-am-least-confident-about)) —
+distinct from the warnings, and the one part of the report written to be doubted. Gate
+failures get ≤2 fix rounds, the second one conditional on a changed Tier-0 signal
+(principle 7). Manifest: `blocked_on: "design-choice"`.
 
 **Artifacts:** `runs/<run_tag>/gates/design-gate-report.md`, `research/README.md`.
 
@@ -574,8 +611,10 @@ loop:
    (conflicting tasks defer to a later wave), capped at the parallel-implementers knob:
    3–5 at `standard`, 6–10 at `premier`.
 3. Spawn the whole wave's implementer + test-engineer pairs IN PARALLEL, one message.
-4. **Sync point** — full test suite + every generated skill's `scripts/*.sh` gate green
-   before the next wave; NEVER start a wave on red. Then COMMIT the wave
+4. **Sync point** — re-verify the frozen oracle (exit 0 or hard stop), then the full test
+   suite, then every FROZEN skill gate under `runs/<run_tag>/gates/skill-scripts/` green
+   before the next wave — never the live `app-*/scripts/` copies; NEVER start a wave on
+   red. Then COMMIT the wave
    (`wave <N>: <task ids> — <summary>`). The wave's plan line — `wave <N>: [<task ids>]`
    — was already appended to `runs/<run_tag>/temp/wave-log.md` BEFORE the wave spawned:
    that log-before-spawn ordering IS the crash-resume mechanism (a logged wave with no
@@ -626,10 +665,27 @@ findings (anything a small Edit hunk can't fix) become NEW TASKS and loop back t
 step 14 — max 1 loop, then remaining structural findings go in the ship report as known
 gaps.
 
+**Two rounds, and the second one is earned (principle 7).** Step 15 gets at most TWO
+passes, and the second pass runs only when a Tier-0 signal actually changed between them:
+new commits in `app/` since the first pass, a different test count or a suite that flipped
+red→green, or a generated-skill script gate whose exit code flipped. Step 14's loop-back
+is what produces that change, which is why the loop exists and why nothing else licenses a
+second pass. Same code, same green suite, no changed signal → do not re-critique; the
+findings that survived pass 1 are recorded as known gaps and the run moves to step 16.
+Re-running three opus critics over an unchanged tree costs a full critic panel to buy a
+differently-worded version of the same list.
+
+Step 15 also emits the build half of the pipeline's calibrated-uncertainty record —
+`runs/<run_tag>/gates/review-uncertainty.md`, the honest account of what the critics could
+NOT check (screens they failed to capture, features verified by grep rather than by
+running, whole surfaces no critic reached) — which step 16 folds into `ship-report.md`'s
+`## What I am least confident about`. See
+[Calibrated uncertainty](#calibrated-uncertainty--what-i-am-least-confident-about).
+
 **Artifacts:** critic findings JSONs at
-`runs/<run_tag>/gates/review-findings-{code,spec,ux}.json` (plus `review-merged.json`
-and `review-patch-log.json` in the same directory), patched + committed code in `app/`,
-any new task files in `epics/`.
+`runs/<run_tag>/gates/review-findings-{code,spec,ux}.json` (plus `review-merged.json`,
+`review-patch-log.json` and `review-uncertainty.md` in the same directory), patched +
+committed code in `app/`, any new task files in `epics/`.
 
 ### Step 16 — Ship gate (`hyperbuild-16-ship-gate`)
 
@@ -637,9 +693,14 @@ Runs the [ship gate checklist](#gate-2--ship-gate-step-16) via 1 `hb-gate-verifi
 including the mechanical TRACEABILITY CHAIN walk (feature → spec file → done tasks →
 files in `app/` → passing tests) and the git checks (clean working tree, wave/epic
 commit history present).
-Failures: fix the artifacts, re-run the gate — max 3 rounds, else the run stays blocked
-with an honest report. The final message: what was built, how to run it, test count,
-known gaps.
+Failures: fix the artifacts, re-run the gate — max 2 rounds, and the second only when a
+Tier-0 signal changed between them (principle 7); else the run stays blocked with an
+honest report. The final message: what was built, how to run it, test count, known gaps.
+`ship-report.md` additionally carries the mandatory
+**`## What I am least confident about`** section — built from step 15's
+`review-uncertainty.md` plus what the gate itself could not prove, and deliberately NOT a
+restatement of known gaps
+([Calibrated uncertainty](#calibrated-uncertainty--what-i-am-least-confident-about)).
 
 **Artifacts:** `runs/<run_tag>/gates/ship-report.md`.
 
@@ -676,7 +737,9 @@ Run workspace — `runs/<run_tag>/` (full contract in `runs/README.md`):
 ```
 runs/<run_tag>/
 ├── idea.md                    # GOSPEL: verbatim user idea + frontmatter
-├── manifest.json              # step transitions; THE resume point
+├── manifest.json              # step transitions + per-step usage; THE resume point
+├── .lock                      # concurrency lock: pid + host + ISO timestamp (router)
+├── ABORT                      # kill switch: create this file to stop between steps
 ├── scaffold.md                # orchestrator's private planning doc (never ships)
 ├── temp/orchestrator-notes.md # anti-idle thinking log
 ├── temp/claims-0N.json        # per-area claim register (steps 2/3 → 01, 5 → 02, 6 → 03, 9 → 04):
@@ -692,11 +755,20 @@ runs/<run_tag>/
 ├── decisions/
 │   ├── platform.md            # chosen stack + rationale (step 1)
 │   ├── design-choice.md       # written by /hyperbuild-choose
+│   ├── gate-changes.md        # FIRST USE ONLY (absent on a clean run) — the log that makes
+│   │                          #   a live/freeze gate-script divergence a warn instead of a
+│   │                          #   FAIL. Five fields per entry: script path, old_sha, new_sha,
+│   │                          #   decided_by, why. Read by scripts/gate-ship.sh (check S13)
 │   └── revisions.md    # appended by /hyperbuild-revise + /hyperbuild-redesign
 └── gates/
-    ├── design-gate-report.md  # step 12
+    ├── design-gate-report.md  # step 12 (incl. ## What I am least confident about)
     ├── visual-qa-{a,b,c}.json # step 8.5 — per-direction visual QA findings
-    └── ship-report.md         # step 16
+    ├── skill-scripts/         # step 12 — FROZEN copies of the generated skill gates,
+    │                          #   SHA-256 recorded in the manifest; steps 14/16 run
+    │                          #   ONLY these, never the live .claude/skills/app-*/ ones
+    ├── frozen-gates.sha256    # step 12.1b — `shasum -a 256 -c` sidecar for the freeze above
+    ├── review-uncertainty.md  # step 15 — what the critics could NOT check
+    └── ship-report.md         # step 16 (incl. ## What I am least confident about)
 ```
 
 Manifest schema:
@@ -708,10 +780,38 @@ Manifest schema:
   "platform": "flutter",
   "gear": "standard",
   "steps": {"1": "done", "2": "done", "3": "done", "3.5": "done", "4": "done", "4.5": "done"},
+  "usage": {
+    "2": {
+      "agents_spawned": 9, "turns": 41, "wall_clock_s": 1180,
+      "outcome": "done", "cost_usd": null, "cost_source": "unavailable",
+      "notes": ""
+    }
+  },
+  "usage_summary": null,
+  "frozen_gates": null,
   "design_choice": null,
   "blocked_on": null
 }
 ```
+
+`usage` is written by the ROUTER after every step returns, one record per step key — not
+by the steps themselves, so a step that dies mid-way still leaves an entry sitting at
+`outcome: "running"`, which is exactly the signal a crash-resume needs. `usage_summary`
+rolls the records up per stage at each gate; `frozen_gates` is `null` until step 12
+freezes the generated-skill script gates and records a SHA-256 per script. The exact
+field contract, the honesty rules for `cost_source`, and the shell that writes them all
+live in the router skill's **Run control** section — that is the authority; this block is
+the architectural summary.
+
+Instrumentation exists because nothing in this pipeline could previously be priced: the
+gears in [Scale gears](#scale-gears) advertise scale with no cost attached to it, and
+every experiment worth running needs a denominator. Two honesty rules travel with it.
+`cost_usd` is `null` with `cost_source: "unavailable"` whenever the runtime did not hand
+back a real number — a modelled estimate presented as a measurement is worse than a blank,
+because it will be averaged into a decision later. And where per-token detail IS available,
+watch cache reads specifically: a near-zero cache-read share across a run means something
+is invalidating the prompt prefix on every spawn, and the run is paying roughly an order of
+magnitude more than it should for identical context.
 
 Resume ladder (the router owns it): manifest first, TodoWrite second, artifact scan
 third — the router carries the full step→canonical-artifact table. If `design_choice`
@@ -855,8 +955,8 @@ check. Format and rationale: RESEARCH-ARCHIVE §4.
 
 Every check is a disk-verifiable fact, executed mechanically by `hb-gate-verifier` and
 recorded with per-check evidence in `runs/<run_tag>/gates/design-gate-report.md`.
-Failures are fixed by changing the artifacts (max 3 rounds), NEVER by re-reading a check
-charitably.
+Failures are fixed by changing the artifacts (MAX 2 rounds, the second conditional on a
+changed Tier-0 signal — principle 7), NEVER by re-reading a check charitably.
 
 - [ ] `runs/<run_tag>/idea.md` exists with frontmatter (`run_tag`, `created`, `platform`)
 - [ ] `runs/<run_tag>/decisions/platform.md` exists with a stated rationale
@@ -938,19 +1038,39 @@ charitably.
 - [ ] Coverage complete BOTH directions: every must/should feature id appears in ≥1
       task's `features:` list, and every task's cited features exist
 - [ ] Manifest: steps 1–11 (incl. 3.5, 4.5 and 8.5) all `done`
+- [ ] **`oracle-frozen`** (step 12 check 24): every `.claude/skills/app-*/scripts/*.sh`
+      has a frozen copy under `runs/<run_tag>/gates/skill-scripts/<skill>/<script>.sh`,
+      each hashed into `manifest.frozen_gates` with `frozen_gates_frozen_at` set, and the
+      `frozen-gates.sha256` sidecar re-verifies. An empty `frozen_gates`, or any live
+      script with no frozen copy, FAILS — **Stage B may not start without a verified
+      freeze** ([Enforcement](#the-frozen-oracle))
+- [ ] `design-gate-report.md` carries a non-empty `## What I am least confident about`
+      section with 3–6 named entries, each citing an artifact by path — and it is NOT a
+      copy of the warnings or the known-visual-issues table (see
+      [Calibrated uncertainty](#calibrated-uncertainty--what-i-am-least-confident-about))
 
 On pass: write the report, set `blocked_on: "design-choice"`, STOP, and message the user
 (summary + gallery path + `/hyperbuild-choose a|b|c`). This is the ONE permitted stop.
 
 ## Gate 2 — ship gate (step 16)
 
-Same mechanics: `hb-gate-verifier`, per-check evidence, artifacts-only fixes, max 3
-rounds, then `blocked_on` set + an honest report in
-`runs/<run_tag>/gates/ship-report.md`.
+Same mechanics: `hb-gate-verifier`, per-check evidence, artifacts-only fixes, MAX 2
+rounds (the second conditional on a changed Tier-0 signal — principle 7), then
+`blocked_on` set + an honest report in `runs/<run_tag>/gates/ship-report.md`.
 
 - [ ] Full test suite passes (exit 0); test count recorded
 - [ ] Lint/analyzer clean (zero errors; warnings enumerated in the report)
-- [ ] Every generated-skill `scripts/*.sh` gate passes (exit 0), script list recorded
+- [ ] **`oracle-frozen`** (step 16 check 10, the HARD check that runs FIRST): every hash in
+      `manifest.frozen_gates` still matches its frozen copy. A tampered, missing or
+      unrecorded frozen copy is an unconditional FAIL with **no fix lane**. A live
+      `app-*/scripts/` script that diverged from the freeze is also a FAIL, downgraded to
+      `warn` ONLY when every divergent script has a `decisions/gate-changes.md` entry
+      naming the script, its old and new sha, who decided, and why
+- [ ] Every **FROZEN** generated-skill gate at `runs/<run_tag>/gates/skill-scripts/**`
+      passes (exit 0) at its recorded hash, script list + hashes recorded. The LIVE
+      `.claude/skills/app-*/scripts/*.sh` copies are never executed here and there is no
+      fallback to them — a live script that differs is `oracle-frozen`'s finding, not this
+      check's input
 - [ ] App builds with the platform-appropriate build command; launch verified where the
       platform allows it
 - [ ] Every task file in `epics/**/task-*.md` has `status: done`
@@ -962,13 +1082,240 @@ rounds, then `blocked_on` set + an honest report in
       `status: done` → every file in those tasks' `files:` lists exists in `app/` →
       the tests those tasks added pass. A break ANYWHERE in the chain blocks the ship
 - [ ] `app/` git working tree is clean, with the wave/epic commit history present
-- [ ] Step 15 critic findings resolved or explicitly listed as known gaps
+- [ ] Step 15 critic findings resolved or explicitly listed as known gaps — and the UX
+      fidelity verdict is LABELLED in the report as a judge's opinion (Tier 2), never as
+      a mechanical pass: `hb-ux-critic` compares screenshots and cannot block the ship
 - [ ] `gates/ship-report.md` written: what was built, how to run it, test count, known
       gaps
+- [ ] `ship-report.md` carries a non-empty `## What I am least confident about` section
+      with 3–6 named entries, each citing a file, a test, or a check by name — folding in
+      `gates/review-uncertainty.md` from step 15 and distinct from the known-gaps list
+      ([Calibrated uncertainty](#calibrated-uncertainty--what-i-am-least-confident-about))
 
 Final message to the user mirrors the report: what was built, how to run it, test count,
-known gaps. If blocked after 3 rounds: say exactly what is red and why. Honesty over
-optimism.
+known gaps, and the least-confidence list. If blocked after 2 rounds: say exactly what is
+red and why. Honesty over optimism.
+
+---
+
+## Enforcement and observability
+
+Everything above this line is a CONTRACT: prose that a model reads and, usually, obeys.
+This section is the part that does not depend on obedience. The distinction is the whole
+point — an instruction lives in a context window and a context window gets compacted. The
+canonical incident is exactly that: a user told her agent "confirm before acting",
+compaction dropped the instruction, and it mass-deleted thousands of emails. `CLAUDE.md`'s
+ownership rules were that same shape of promise until this layer existed. **Hooks,
+allowlists, caps and lockfiles are not advice. They hold regardless of what the model
+decided to do.**
+
+### The calibration that governs this whole section
+
+This repo is BOTH the harness and the workspace the harness runs in. hyperbuild's own
+skills, agents and docs are edited here, by Claude, constantly. So the enforcement layer
+is deliberately asymmetric:
+
+- **HARD-DENY only what is unambiguously destructive or out-of-scope** — history
+  rewriting, recursive deletes outside the repo, publishes and releases, credential
+  writes, and writes outside the repo. `rm -rf node_modules` and `rm -rf app/build` are
+  ordinary work and are allowed; `rm -rf ~/Documents` is not.
+- **LOG OR WARN everything else.** Ownership rules, path conventions, "don't hand-edit
+  `runs/`" — these are worth a visible warning and an audit-log line, and they are NOT
+  worth a block.
+- **Editing the harness is never blocked.** `.claude/skills/hyperbuild*`,
+  `.claude/agents/hb-*`, `docs/**`, root `*.md`, `scripts/**` and `evals/**` are the
+  harness's source. A guardrail that stops a maintainer (or Claude, working for one) from
+  editing them is a BUG in the guardrail, not a safety win. Changes to those paths are
+  NOTIFIED — surfaced in the transcript and logged — never refused.
+
+If you are tempted to widen a deny rule, widen the log instead and read the log.
+
+### What is enforced, and where
+
+The binding rule list is [`docs/GUARDRAILS.md`](docs/GUARDRAILS.md) — every blocked
+pattern, every deliberate allowance, and the escape hatch. This section is the
+architecture; that file is the contract.
+
+| Mechanism | Where it lives | What it guarantees |
+|---|---|---|
+| `PreToolUse` deny hooks | `.claude/settings.json` → `scripts/hooks/guard-bash.sh`, `guard-write.sh` | Destructive and outbound actions never execute: force-push and remote branch deletion, `git reset --hard`, history rewrites, recursive deletes OUTSIDE the repo, package publishes, `gh release`/`gh repo delete`, credential writes, and any write outside the checkout. **`exit 2` blocks; `exit 1` does NOT** — a hook that returns 1 logs an error and the action proceeds anyway |
+| `ask` rules | `.claude/settings.json` | The reversible-but-outbound middle tier prompts instead of blocking: plain `git push`, `gh pr create`, edits to the settings file and the hook scripts themselves |
+| Config-change notification | `.claude/settings.json` → `guard-write.sh --notify` | Settings and skill changes are surfaced and logged. NOTIFIED, not blocked — see the calibration above |
+| Per-step tool allowlists | `.claude/agents/hb-*.md` + step spawn flags | Rule of Two, below. A capability an agent does not have cannot be regained by prompting |
+| Frozen gate scripts | `runs/<run_tag>/gates/skill-scripts/` + `frozen_gates` hashes | The build agent cannot edit the oracle that grades it |
+| Caps | per-spawn flags + `README.md` version floor | No unbounded loop, no unbounded bill |
+| `runs/<run_tag>/.lock` | the router | Two resumes of one run cannot both execute |
+| `runs/<run_tag>/ABORT` | the router, checked between every step | A stop that works from outside the loop |
+| `scripts/gate-*.sh` | repo root; `guard-write.sh` refuses them while any run is in `BUILD`, `Edit(/scripts/gate-*.sh)` is on the `ask` list otherwise | Gate checks are exit codes, not a model reading a list — and no build agent can edit the oracle grading it |
+| Telemetry + `usage` | `.claude/settings.json` + `manifest.json` | A bad run is reconstructable afterwards |
+
+### Rule of Two — least privilege per STEP, not per run
+
+No step may simultaneously hold **untrusted input + secrets/credentials + external
+egress**. The split is mechanical and costs nothing:
+
+- **Research steps (2, 3, 5, 6, 9)** ingest untrusted web content and have web tools —
+  and therefore have no write access to `app/` and no git.
+- **Build steps (13–16)** hold repo write, Bash and git — and therefore run with
+  `WebFetch` and `WebSearch` DISALLOWED. An implementer does not need to browse; it has
+  the stack-guide, the feature specs, and the mockups, all already fetched, verified and
+  written down by Stage A. This is the highest-severity exposure in the harness and
+  removing it costs the pipeline nothing.
+- `hb-implementer` and `hb-test-engineer` carry an explicit tool allowlist rather than
+  `inherit / all tools`.
+
+A prompt-injection *detector* is deliberately NOT part of this design. Every published
+defense of that shape has been broken under adaptive attack; the mitigation that works is
+not holding the three capabilities at once.
+
+### The frozen oracle
+
+Step 10 generates `.claude/skills/app-*/scripts/*.sh` PASS/FAIL gates, and steps 14 and 16
+run them. Until they are frozen, that is **the agent authoring the check that grades the
+agent** — the single structural contradiction in the pipeline, and the one failure mode
+the entire research contract exists to prevent everywhere else.
+
+The fix is freeze-and-hash, at step 12:
+
+1. Copy every `.claude/skills/app-*/scripts/*.sh` to `runs/<run_tag>/gates/skill-scripts/`.
+2. Record a SHA-256 per file in the manifest's `frozen_gates`.
+3. Steps 14 and 16 execute **only** the frozen copies. A hash mismatch is a ship-gate
+   failure, reported by name.
+
+**Do not hide the scripts.** Concealment is the wrong instinct and it is measurably worse:
+the highest reward-hacking rate on record was measured with tests *hidden*, where the model
+responded by instrumenting the scorer. Visible-and-immutable beats hidden-and-editable. The
+scripts stay readable by everyone; they are simply not writable by the thing they judge.
+
+### Caps
+
+Enforced by the runtime, never by the prompt.
+
+| Cap | Applies to | Note |
+|---|---|---|
+| `--max-turns` | the whole invocation (headless) + a per-step-class SOFT budget the router counts on disk | **The runtime default is NO LIMIT.** That is an infinite-loop bug shipped as a default, and it is failure mode #3 — "never finishes" — which no test catches |
+| `--max-budget-usd` | the whole invocation (headless) | Requires a recent Claude Code; on an older build the flag silently does not enforce. Subagent spend counts toward it; background subagents are killed at the cap |
+| Wall clock | per step class, per wave | The complement to turns: a step can burn hours without burning many turns |
+
+**The asymmetry that matters:** the runtime's caps are per SESSION, not per step. A
+headless `/hyperbuild` invocation can pass them directly; an interactive session cannot,
+because the flags bound the whole invocation rather than the step inside it. So the router
+keeps the per-step-class budget ON DISK — the in-progress step's `usage.turns` — and
+enforces it itself at the same sync points where it checks `ABORT`. That is a soft cap
+honestly labelled as one: it is a supervisor counting, not a runtime refusing. Where the
+run IS headless, the hard flags are passed too, and the hard cap wins.
+
+Set the dollar values from the `usage` numbers this pipeline now records — not from the
+literature. The only published per-run figures for anything comparable are n = 1 and
+several model generations stale.
+
+### The lock and the kill switch
+
+**`runs/<run_tag>/.lock`** — pid + host + ISO timestamp, claimed by the router before any
+step and released at every stop. Without it, two sessions resuming one run tag both
+execute, and a manifest is crash-*resumable*, not crash-*proof*: nothing in this design is
+a supervisor, and there is no heartbeat. A stale lock (dead pid) is reported and can be
+cleared; a live one refuses with the owning pid named. This is ~20 lines and it is the
+entire gap that a durable-execution runtime is usually bought to fill — see
+[docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) for why we are not buying one.
+
+**`runs/<run_tag>/ABORT`** — the kill switch. `touch runs/<run_tag>/ABORT` from any other
+terminal; the router checks for it between every step and stops cleanly, recording
+`blocked_on: "aborted-by-user"` in the manifest — that exact string, because the router's
+Recovery ladder branches on it. The documented failure it answers is mundane and real:
+"I couldn't stop it from my phone."
+
+### Gates as scripts
+
+`scripts/gate-design.sh` and `scripts/gate-ship.sh` live in the harness repo. This repo is
+also where the harness is developed, so "outside every agent's write path" is made true by
+mechanism rather than by geography, in two layers: `guard-write.sh` rule 4 **refuses** any
+write to `scripts/gate-*.sh` while any `runs/*/manifest.json` is in stage `BUILD` — exactly
+the window in which `hb-implementer`, `hb-test-engineer` and `hb-patcher` are live and hold
+`Edit` — and `Edit(/scripts/gate-design.sh)` / `Edit(/scripts/gate-ship.sh)` sit on the
+`ask` list the rest of the time, so a maintainer edit costs one deliberate click and an
+agent edit is never silent. Each gate additionally records its own `script_sha256` into
+every round's JSON, so a change is detectable after the fact as well as prevented during a
+build. `hb-gate-verifier` RUNS them and reports exit codes plus per-check
+evidence; it does not adjudicate them. A gate whose execution is a model reading a prose
+checklist is a Tier-2 gate wearing Tier-0 clothes — and most of both checklists is pure
+code: set coverage, referential integrity, frontmatter schemas, DAG acyclicity, provenance
+blocks present, closed-vocabulary verdicts, no dangling paths in a task's `files:` list.
+The checks that genuinely need judgment stay in the report as labelled judgment.
+
+**The honest limit, stated because every deterministic-gate design must account for it:**
+a `Stop` hook is overridden after 8 consecutive blocks. Even the script gate is soft at the
+extreme. Layer accordingly — deny hook (deterministic) → sandbox (OS) → classifier
+(probabilistic) → the human at the design gate — and treat a green gate as a claim to
+audit, not a result to trust.
+
+### Observability
+
+Two records, both correlated per run:
+
+- **`usage` in the manifest** (see [State layout](#state-layout)) — per step, and split
+  along an honesty line the router enforces. **Always measured:** `wall_clock_s`,
+  `agents_spawned`, `turns`, `outcome`, `notes`. **Only when a headless result object or
+  `/cost` output was actually observed:** `cost_usd` (with `cost_source` naming where it
+  came from) and the optional `tokens` sub-object. Otherwise `cost_usd` is `null` and
+  `cost_source` is `"unavailable"` — a running skill is not handed its own token counts or
+  dollar spend, and estimating one invented number corrupts every comparison the record
+  exists to enable. Written by the router; shipped.
+- **OpenTelemetry** — `claude_code.cost.usage`, `claude_code.token.usage`,
+  `claude_code.tool_decision`, `claude_code.tool_result`,
+  `claude_code.permission_mode_changed`, correlated by `prompt.id` / `session.id`, written
+  into `runs/<run_tag>/`. **TODO** — tracked as item 8 in
+  [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md). The manifest gives you cost and outcome per
+  step; this gives you the tool-by-tool decisions inside a step, which is what you need
+  when the question is "why did it do that" rather than "what did it cost".
+
+This is not a nice-to-have. The binding constraint on a running loop is not error *rate*
+but error *visibility*: in the one forensic incident corpus available, a runtime with 4,286
+unit tests and 827 governance checks achieved **0% ex-ante prevention** and ~70% of
+incidents were caught by a human noticing, with detection latency running from 13 hours to
+60 days. Tests stop the failure you already had. The log is what lets you see the next one.
+
+### Calibrated uncertainty — what I am least confident about
+
+Both gate reports carry a mandatory section titled exactly
+`## What I am least confident about`. It is short (3–6 entries), skeptical, written in
+plain language for a human at a decision point, and it is **NOT** the known-gaps list:
+
+| `## Known gaps` / warnings | `## What I am least confident about` |
+|---|---|
+| Findings the pipeline FOUND and did not fix | Places the pipeline may be WRONG and would not know |
+| Bookkeeping: resolved / accepted / deferred | Calibration: where the evidence is thin, the check is weak, or the sample was small |
+| Generated from the findings JSONs | Written by reasoning about what was never checked |
+| A closed list | An honest guess, explicitly fallible |
+
+Each entry names the artifact by path and says what would settle it. Good entries look
+like: *"The pricing table for Competitor C rests on one vendor page fetched on 2026-07-12
+and no `verify/` file selected it — if it is wrong, features F-03 and F-07 are mispriced
+against the market."* · *"Direction b's dark mode was judged from three screenshots; the
+other nine were rendered light-only."* · *"Feature F-11 is marked implemented on the
+strength of a grep for its route name; no test exercises the flow end to end."* Bad
+entries look like: *"Some research may be outdated."*
+
+It exists because the pipeline's own evidence says the failure that reaches users is the
+one nobody flagged: 0% ex-ante prevention against thousands of tests, ~70% of incidents
+caught by a human noticing, and — in the journalism record, which is the closest available
+analogue for an unattended content pipeline — every single documented failure caught
+externally, never by the pipeline that produced it. It is also the cheapest artifact in
+the harness: two paragraphs, written once per gate, at the exact moment a human is already
+reading.
+
+**Where it comes from.** Step 12 writes its own from Stage A: unresolved critic findings,
+`UNVERIFIABLE` verdicts, thin claim coverage, degraded visual QA, anything the gate passed
+as a warning. Step 16 folds in `runs/<run_tag>/gates/review-uncertainty.md`, which step 15
+writes to record what its three critics could NOT check — screens they failed to capture,
+features confirmed by reading rather than by running, surfaces no critic reached.
+
+**Rule (verification decision rule, degraded mode):** a step whose completion predicate is
+not Tier 0 or Tier 1 may still run unattended — but it produces the artifact AND a
+calibrated statement of what it is least confident about, and a human reads that. It never
+produces a green check. `hb-ux-critic`'s screenshot-fidelity verdict is the canonical
+instance: Tier 2, genuinely useful, labelled as a judge's opinion in the report, and
+structurally unable to block the ship.
 
 ---
 
@@ -991,6 +1338,13 @@ once across many builds. A run that needs to be cheaper runs `standard` — neve
 hand-trimmed `standard` with the verifiers quietly dropped, which converts a checked
 archive back into a confident survey.
 
+**One honest caveat on that trade, because it is the biggest one in this document.** The
+reuse claim is the economic justification for the pipeline's largest cost line, and nobody
+has measured it: the half-life of a verified research area is unknown, and the 90-day
+re-verify rule attached to it is an assertion rather than a finding. Tracked as item 22 in
+[docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) — instrument it before defending it. The
+per-step `usage` numbers the manifest now records are the first half of being able to.
+
 | Knob | standard | premier |
 |------|----------|---------|
 | Competitors analyzed | 6–8 | 12–15 |
@@ -1007,7 +1361,11 @@ archive back into a confident survey.
 | Epics | 4–8 | 6–12 |
 | Tasks per epic | 3–8 | 4–10 |
 | Parallel implementers per wave (step 14) | 3–5 | 6–10 |
-| Critic fix rounds (gates) | ≤3 | ≤3 |
+| Critic fix rounds (gates) *(round 2 only on a changed Tier-0 signal — principle 7)* | ≤2 | ≤2 |
+
+The fix-round budget is the ONE knob that does not widen with the gear. More rounds is
+not more thoroughness: without a changed mechanical signal, round 3 measurably makes the
+artifact worse (principle 7). `premier` buys more evidence, not more re-reading.
 
 ---
 
@@ -1022,16 +1380,16 @@ is a deliberate port of a mechanism that hyperresearch proved under fire.
 | `runs/<run_tag>/idea.md` — verbatim, block-quoted into every spawn | `research/runs/<vault_tag>/query.md` — "RESEARCH QUERY (verbatim, gospel)" | The user's exact words are the supreme arbiter for every subagent. Paraphrase drifts; gospel doesn't. |
 | `manifest.json` + resume ladder (manifest → TodoWrite → artifact scan) | run manifest + `run resume` + per-skill "Recover state" sections | Disk is truth, context is cache. A crashed run resumes at the exact dead step; no step trusts the orchestrator's memory. |
 | Critics emit findings JSON, `hb-patcher` is tool-locked `[Read, Edit]`, orchestrator pre-stubs its log files | 4 parallel critics + `hyperresearch-patcher` `[Read, Edit]` lock + pre-stubbed `patch-log.json` | Capability = contract. Reviewers locate problems and cite evidence; exactly one downstream role owns the wording; the tool lock makes wholesale regeneration physically impossible. |
-| Step 12 design gate + step 16 ship gate, run by `hb-gate-verifier`, ≤3 fix rounds, honest blocked state | `run verify` ship gate + lint battery ("Gate errors are facts about the report, not opinions") | Gates are mechanical checklists with per-check evidence. Failures change artifacts, never interpretations. Blocked runs say so instead of shipping quietly broken. |
+| Step 12 design gate + step 16 ship gate, run by `hb-gate-verifier` against `scripts/gate-*.sh`, ≤2 fix rounds, honest blocked state | `run verify` ship gate + lint battery ("Gate errors are facts about the report, not opinions") | Gates are mechanical checklists with per-check evidence. Failures change artifacts, never interpretations. Blocked runs say so instead of shipping quietly broken. Divergence: hyperbuild cut the budget from 3 rounds to 2 and made the second conditional on a changed Tier-0 signal — unaided re-attempts degrade rather than converge (principle 7), and a gate is exactly the place where "try again" feels free and is not. |
 | `standard`/`premier` gears; step 1 records `gear`, steps cite their numbers | `full`/`premier` gear profiles rendered into skills | All scale knobs live in one table and widen together — scaling is a gear change, not sixteen prompt edits. |
 | The 4-piece spawn contract | The "standard 3-piece contract" (gospel query, pipeline position, YOUR INPUTS + run directives) | Every subagent knows the user's intent, its exact position, its exact inputs, and its exact output path — so it cannot overreach or free-write. |
 | Root-level `research/` vault, plain markdown, frontmatter provenance | `research/notes/` vault — "Markdown is truth, SQLite is cache" | Research is a first-class, human-readable deliverable that outlives the run; later runs reuse it before re-fetching. |
 | `temp/orchestrator-notes.md` anti-idle protocol | "CRITICAL: never emit bare text while waiting" + orchestrator-notes | Headless-mode survival: a text-only response ends the turn; writing evolving thoughts to disk keeps the turn alive and is productive. |
 | Adversarial searches required in every research artifact ("X criticism", "why I stopped using X") | Step 2's mandatory adversarial search pass | A corpus of praise produces a naive plan; hostile sources are fetched on purpose. |
-| Step 3.5 research audit — `hb-research-critic` + the area's `hb-corpus-critic`s refute the corpus, cluster syndicated copies | hyperresearch's corpus critic / source-independence audit | Research is attacked BEFORE it is consumed: derivative copies count as ONE source, and every headline claim survives a refutation attempt or gets downgraded — never silently deleted. |
+| Step 3.5 research audit — `hb-research-critic` (the `live-evidence` lens, on an enumerated 7-check list) + the area's `hb-corpus-critic`s refute the corpus, cluster syndicated copies | hyperresearch's corpus critic / source-independence audit | Research is attacked BEFORE it is consumed: derivative copies count as ONE source, and every headline claim survives a refutation attempt or gets downgraded — never silently deleted. Divergence: the seat is defined by a capability the corpus critics do not have (live fetches) and an enumerated checklist, not by a lens name — a critic seat that merely renames another critic is a token line item, not a defect class. |
 | The `verify/` engine — one `hb-claim-verifier` per LOAD-BEARING claim, told to REFUTE it against primary sources, verdicts from a closed vocabulary, corrections applied in `author/` (`docs/RESEARCH-ARCHIVE.md` §5–§7) | hyperresearch's cite-checker pass + its source-independence audit, fused and pushed down to the claim | hyperresearch never lets a citation into the report without a checker fetching the source, and never lets five syndicated copies of one story count as five. hyperbuild applies both at claim granularity: the cite-checker becomes one agent per claim, handed the claim ALONE and told to kill it (an agent handed five claims confirms all five — it has no budget to lose an argument with itself); the independence audit becomes the corpus critics, who see what no single-claim check can, i.e. dimensions that are each internally consistent and disagree only with each other. The verdict vocabulary is closed (CONFIRMED / PARTIALLY_TRUE / REFUTED / UNVERIFIABLE) for the same reason hyperresearch's gate errors are facts, not opinions — "mostly true" is not a result you can act on. Divergence: hyperresearch checks citations in a report it is about to ship; hyperbuild checks claims a whole APP will be built on, so REFUTED is barred from every downstream artifact, not just the prose. |
 | Every research file ends with the verbatim prompt that produced it (the PROVENANCE RULE) + `research/README.md`'s reusability guide | The root-level vault's "markdown is truth" provenance frontmatter, extended | hyperresearch keeps sources and dates so a finding can be re-checked. hyperbuild keeps the PROMPT too, because the reusable asset is the brief and the fan-out, not the conclusion: the finding says what one agent decided, the prompt says what it was asked and what it was never asked to consider. That is what lets the NEXT checkout copy an area in and re-run it with a different brief instead of re-buying it at full price. |
-| Step 8.5 visual QA — `hb-design-critic` opens every rendered screenshot and grades it against `docs/DESIGN-CRAFT.md`, defects re-spawn the smith that drew the screen | The same adversarial-critic mechanism, pointed at PIXELS instead of prose | hyperresearch attacks the artifact it is about to ship in the medium the reader will consume it in. Design's medium is the render, so the critic must LOOK: a craft rule checked only against the design system's own prose is self-certification (the first run's directions self-scored "three different products" while rendering one layout in three palettes). Findings JSON, no edits, ≤3 fix rounds — a design gate with the same mechanics as every other gate. |
+| Step 8.5 visual QA — `hb-design-critic` opens every rendered screenshot and grades it against `docs/DESIGN-CRAFT.md`, defects re-spawn the smith that drew the screen | The same adversarial-critic mechanism, pointed at PIXELS instead of prose | hyperresearch attacks the artifact it is about to ship in the medium the reader will consume it in. Design's medium is the render, so the critic must LOOK: a craft rule checked only against the design system's own prose is self-certification (the first run's directions self-scored "three different products" while rendering one layout in three palettes). Findings JSON, no edits, ≤2 critic rounds — a design gate with the same mechanics as every other gate, and the step whose round budget the whole pipeline eventually adopted. |
 | Step 14 wave loop — disjoint-`files:` tasks from any epic run in parallel between sync points | Parallel-within-a-step discipline (all Task calls in ONE message, non-overlapping assignments) | Parallelism lives inside one unit of work with disjoint assignments and a hard gate at its edge; the wave is step 14's unit, the full-suite sync point its gate. |
 | Per-wave/per-epic git commits in `app/` (`wave <N>: <task ids> — ...`) + clean-tree ship gate | Pre-stubbed `patch-log.json` provenance ledger | Every change is attributable after the fact: task → commit is the audit trail, epic critics review real diffs, and rollback is `git revert`, not archaeology. |
 | Small, categorized parts: the stack-guide's code taxonomy (step 5), one-kind small tasks (step 11), each piece's tests green BEFORE composition (step 14) | Atomic work items + the patcher's small surgical Edit hunks (per-hunk cap) | Small pieces are easier to test, review, and implement with focus; screens compose from already-tested subcomponents instead of being built in one shot. |
